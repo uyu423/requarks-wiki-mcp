@@ -24,7 +24,7 @@ export function enforceMutationSafety(config: WikiConfig, confirm: string): void
   if (!config.mutationsEnabled) {
     throw new WikiMutationDisabledError()
   }
-  if (!config.mutationConfirmToken || !safeTokenCompare(confirm, config.mutationConfirmToken)) {
+  if (config.mutationConfirmToken && !safeTokenCompare(confirm, config.mutationConfirmToken)) {
     throw new WikiInvalidTokenError()
   }
 }

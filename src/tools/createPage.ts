@@ -4,7 +4,7 @@ import { textResult, formatErrorForLLM, classifyResponseResultError } from '../e
 import { normalizeWikiPath } from '../safety.js'
 
 const inputSchema = z.object({
-  confirm: z.string(),
+  confirm: z.string().optional().default(''),
   path: z.string().min(1),
   title: z.string().min(1),
   content: z.string(),
@@ -139,11 +139,16 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
 export const createPageTool: ToolModule = {
   definition: {
     name: 'wikijs_create_page',
-    description: 'Create a new page. Requires WIKI_MUTATIONS_ENABLED=true and confirm token.',
+    description:
+      'Create a new page. Requires WIKI_MUTATIONS_ENABLED=true. confirm is only checked when WIKI_MUTATION_CONFIRM_TOKEN is set.',
     inputSchema: {
       type: 'object',
       properties: {
-        confirm: { type: 'string', description: 'Must match WIKI_MUTATION_CONFIRM_TOKEN.' },
+        confirm: {
+          type: 'string',
+          description:
+            'Must match WIKI_MUTATION_CONFIRM_TOKEN if set. Optional when token is not configured.'
+        },
         path: { type: 'string', description: 'Target page path.' },
         title: { type: 'string', description: 'Page title.' },
         content: {
@@ -190,7 +195,7 @@ export const createPageTool: ToolModule = {
         isPublished: { type: 'boolean', description: 'Defaults true.' },
         isPrivate: { type: 'boolean', description: 'Defaults false.' }
       },
-      required: ['confirm', 'path', 'title', 'content'],
+      required: ['path', 'title', 'content'],
       additionalProperties: false
     }
   },

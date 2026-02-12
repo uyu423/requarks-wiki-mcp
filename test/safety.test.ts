@@ -70,6 +70,11 @@ describe('enforceMutationSafety', () => {
     const config = makeConfig({ mutationsEnabled: true, mutationConfirmToken: 'SECRET' })
     assert.doesNotThrow(() => enforceMutationSafety(config, 'SECRET'))
   })
+
+  it('passes without confirm token when token is not configured', () => {
+    const config = makeConfig({ mutationsEnabled: true, mutationConfirmToken: '' })
+    assert.doesNotThrow(() => enforceMutationSafety(config, ''))
+  })
 })
 
 describe('enforceMutationPath', () => {

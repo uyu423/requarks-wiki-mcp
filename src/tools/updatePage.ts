@@ -9,7 +9,7 @@ import {
 import { normalizeWikiPath } from '../safety.js'
 
 const inputSchema = z.object({
-  confirm: z.string(),
+  confirm: z.string().optional().default(''),
   id: z.number().int().positive(),
   title: z.string().optional(),
   content: z.string().optional(),
@@ -176,11 +176,15 @@ export const updatePageTool: ToolModule = {
   definition: {
     name: 'wikijs_update_page',
     description:
-      'Update an existing page by ID. Requires WIKI_MUTATIONS_ENABLED=true and confirm token.',
+      'Update an existing page by ID. Requires WIKI_MUTATIONS_ENABLED=true. confirm is only checked when WIKI_MUTATION_CONFIRM_TOKEN is set.',
     inputSchema: {
       type: 'object',
       properties: {
-        confirm: { type: 'string', description: 'Must match WIKI_MUTATION_CONFIRM_TOKEN.' },
+        confirm: {
+          type: 'string',
+          description:
+            'Must match WIKI_MUTATION_CONFIRM_TOKEN if set. Optional when token is not configured.'
+        },
         id: { type: 'number', description: 'Page ID to update.' },
         title: { type: 'string' },
         content: {
@@ -224,7 +228,7 @@ export const updatePageTool: ToolModule = {
         isPublished: { type: 'boolean' },
         isPrivate: { type: 'boolean' }
       },
-      required: ['confirm', 'id'],
+      required: ['id'],
       additionalProperties: false
     }
   },

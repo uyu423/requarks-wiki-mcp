@@ -316,7 +316,7 @@ export function formatErrorForLLM(err: unknown, context: string): CallToolResult
         'To enable mutations:',
         '1. Set WIKI_MUTATIONS_ENABLED=true in .env',
         '2. Set WIKI_MUTATION_DRY_RUN=false for real writes',
-        '3. Provide the correct confirm token matching WIKI_MUTATION_CONFIRM_TOKEN'
+        '3. Optional hardening: set WIKI_MUTATION_CONFIRM_TOKEN and provide matching confirm in write tool calls'
       ].join('\n')
     )
   }

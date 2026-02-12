@@ -9,6 +9,7 @@ Features:
 - Browse site hierarchy with page tree and view edit history.
 - List all tags for content taxonomy discovery.
 - Optional page create/update/delete tools with explicit safety gates.
+- Built-in markdown reference resource (`wikijs://markdown-guide`) for Wiki.js-specific syntax.
 - Typed error taxonomy with LLM-friendly error messages.
 - GraphQL client with timeout, exponential-backoff retry, and request correlation.
 
@@ -36,7 +37,8 @@ WIKI_DEFAULT_EDITOR=markdown
 
 # Mutating operations are disabled by default
 WIKI_MUTATIONS_ENABLED=false
-WIKI_MUTATION_CONFIRM_TOKEN=CONFIRM_UPDATE
+# Optional extra safety gate for writes. If set, write tools must pass matching confirm.
+WIKI_MUTATION_CONFIRM_TOKEN=
 WIKI_MUTATION_DRY_RUN=true
 # Comma-separated path prefixes without leading slash (empty = no prefix restriction)
 WIKI_ALLOWED_MUTATION_PATH_PREFIXES=
@@ -48,19 +50,19 @@ WIKI_HTTP_MAX_RETRIES=2
 
 Environment variable reference:
 
-| Variable                              | Required | Default          | Description                                                                                                     |
-| ------------------------------------- | -------- | ---------------- | --------------------------------------------------------------------------------------------------------------- |
-| `WIKI_BASE_URL`                       | Yes      | -                | Base Wiki.js URL (for example, `https://wiki.example.com`).                                                     |
-| `WIKI_API_TOKEN`                      | Yes      | -                | Wiki.js API key JWT used in `Authorization: Bearer ...`.                                                        |
-| `WIKI_GRAPHQL_PATH`                   | No       | `/graphql`       | GraphQL endpoint path appended to `WIKI_BASE_URL`.                                                              |
-| `WIKI_DEFAULT_LOCALE`                 | No       | `en`             | Default locale used when tool input does not provide locale.                                                    |
-| `WIKI_DEFAULT_EDITOR`                 | No       | `markdown`       | Default editor used for page creation when not specified.                                                       |
-| `WIKI_MUTATIONS_ENABLED`              | No       | `false`          | Enables write tools (`wikijs_create_page`, `wikijs_update_page`, `wikijs_delete_page`) when set to `true`.      |
-| `WIKI_MUTATION_CONFIRM_TOKEN`         | No       | `CONFIRM_UPDATE` | Required `confirm` value for mutation tool calls. Change this in production.                                    |
-| `WIKI_MUTATION_DRY_RUN`               | No       | `true`           | When `true`, mutation tools return preview only and do not write to Wiki.js.                                    |
-| `WIKI_ALLOWED_MUTATION_PATH_PREFIXES` | No       | `` (empty)       | Comma-separated path prefixes (without leading slash) allowed for mutations. Empty means no prefix restriction. |
-| `WIKI_HTTP_TIMEOUT_MS`                | No       | `15000`          | HTTP request timeout in milliseconds (including body reads). Minimum 1.                                         |
-| `WIKI_HTTP_MAX_RETRIES`               | No       | `2`              | Max retries for transient read failures (408, 502-504). Mutations are never retried. Minimum 0.                 |
+| Variable                              | Required | Default    | Description                                                                                                     |
+| ------------------------------------- | -------- | ---------- | --------------------------------------------------------------------------------------------------------------- |
+| `WIKI_BASE_URL`                       | Yes      | -          | Base Wiki.js URL (for example, `https://wiki.example.com`).                                                     |
+| `WIKI_API_TOKEN`                      | Yes      | -          | Wiki.js API key JWT used in `Authorization: Bearer ...`.                                                        |
+| `WIKI_GRAPHQL_PATH`                   | No       | `/graphql` | GraphQL endpoint path appended to `WIKI_BASE_URL`.                                                              |
+| `WIKI_DEFAULT_LOCALE`                 | No       | `en`       | Default locale used when tool input does not provide locale.                                                    |
+| `WIKI_DEFAULT_EDITOR`                 | No       | `markdown` | Default editor used for page creation when not specified.                                                       |
+| `WIKI_MUTATIONS_ENABLED`              | No       | `false`    | Enables write tools (`wikijs_create_page`, `wikijs_update_page`, `wikijs_delete_page`) when set to `true`.      |
+| `WIKI_MUTATION_CONFIRM_TOKEN`         | No       | `` (empty) | Optional extra safety gate. When set, write tool calls must provide matching `confirm`.                         |
+| `WIKI_MUTATION_DRY_RUN`               | No       | `true`     | When `true`, mutation tools return preview only and do not write to Wiki.js.                                    |
+| `WIKI_ALLOWED_MUTATION_PATH_PREFIXES` | No       | `` (empty) | Comma-separated path prefixes (without leading slash) allowed for mutations. Empty means no prefix restriction. |
+| `WIKI_HTTP_TIMEOUT_MS`                | No       | `15000`    | HTTP request timeout in milliseconds (including body reads). Minimum 1.                                         |
+| `WIKI_HTTP_MAX_RETRIES`               | No       | `2`        | Max retries for transient read failures (408, 502-504). Mutations are never retried. Minimum 0.                 |
 
 Wiki.js prerequisite (GraphQL + API key):
 
@@ -83,7 +85,7 @@ Wiki.js prerequisite (GraphQL + API key):
         "WIKI_DEFAULT_LOCALE": "en",
         "WIKI_DEFAULT_EDITOR": "markdown",
         "WIKI_MUTATIONS_ENABLED": "false",
-        "WIKI_MUTATION_CONFIRM_TOKEN": "CONFIRM_UPDATE",
+        "WIKI_MUTATION_CONFIRM_TOKEN": "",
         "WIKI_MUTATION_DRY_RUN": "true",
         "WIKI_ALLOWED_MUTATION_PATH_PREFIXES": "",
         "WIKI_HTTP_TIMEOUT_MS": "15000",
@@ -113,28 +115,34 @@ npm start
 
 Read tools (7):
 
-| Tool | Description |
-|------|-------------|
-| `wikijs_search_pages` | Full-text search across wiki pages. |
-| `wikijs_list_pages` | List pages with optional locale filter and limit. |
-| `wikijs_get_page_by_path` | Get full page content by path + locale. |
-| `wikijs_get_page_by_id` | Get full page content by numeric ID. |
-| `wikijs_get_page_tree` | Browse site hierarchy (folders, pages, or both). |
-| `wikijs_get_page_history` | View edit history trail for a page. |
-| `wikijs_list_tags` | List all tags for content taxonomy discovery. |
+| Tool                      | Description                                       |
+| ------------------------- | ------------------------------------------------- |
+| `wikijs_search_pages`     | Full-text search across wiki pages.               |
+| `wikijs_list_pages`       | List pages with optional locale filter and limit. |
+| `wikijs_get_page_by_path` | Get full page content by path + locale.           |
+| `wikijs_get_page_by_id`   | Get full page content by numeric ID.              |
+| `wikijs_get_page_tree`    | Browse site hierarchy (folders, pages, or both).  |
+| `wikijs_get_page_history` | View edit history trail for a page.               |
+| `wikijs_list_tags`        | List all tags for content taxonomy discovery.     |
 
 Write tools (3, disabled unless `WIKI_MUTATIONS_ENABLED=true`):
 
-| Tool | Description |
-|------|-------------|
-| `wikijs_create_page` | Create a new page with content, tags, and metadata. |
-| `wikijs_update_page` | Update an existing page by ID. |
+| Tool                 | Description                                                     |
+| -------------------- | --------------------------------------------------------------- |
+| `wikijs_create_page` | Create a new page with content, tags, and metadata.             |
+| `wikijs_update_page` | Update an existing page by ID.                                  |
 | `wikijs_delete_page` | Delete a page by ID. May need `manage:pages` or `delete:pages`. |
 
-Mutation tools require an explicit `confirm` argument that must match `WIKI_MUTATION_CONFIRM_TOKEN`.
+When `WIKI_MUTATION_CONFIRM_TOKEN` is set, mutation tools require a matching `confirm` argument.
 When `WIKI_MUTATION_DRY_RUN=true`, write tools return a preview and do not mutate Wiki.js.
 If `WIKI_ALLOWED_MUTATION_PATH_PREFIXES` is set, mutations are limited to those path prefixes.
 Mutation attempts write a structured audit line to stderr.
+
+## MCP Resources
+
+| Resource URI              | Description                                                                                                           |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `wikijs://markdown-guide` | Wiki.js markdown syntax guide (CommonMark/GFM + Wiki.js-specific extensions) intended for page authoring and updates. |
 
 ## Permission Notes (Wiki.js)
 
@@ -163,6 +171,6 @@ For write workflows:
 - Keep API token server-side only.
 - Start with read-only permissions.
 - Keep `WIKI_MUTATIONS_ENABLED=false` unless updates are needed.
-- Use a non-default `WIKI_MUTATION_CONFIRM_TOKEN`.
+- Optional hardening: set a strong random `WIKI_MUTATION_CONFIRM_TOKEN` and pass matching `confirm` for write calls.
 - Keep `WIKI_MUTATION_DRY_RUN=true` until you are ready for real writes.
 - Use `WIKI_ALLOWED_MUTATION_PATH_PREFIXES` to constrain write scope.

@@ -50,9 +50,10 @@ export function loadConfig(): WikiConfig {
   const mutationConfirmToken = optionalEnv('WIKI_MUTATION_CONFIRM_TOKEN', '')
 
   if (mutationsEnabled && !mutationConfirmToken) {
-    throw new Error(
-      'WIKI_MUTATION_CONFIRM_TOKEN must be explicitly set when WIKI_MUTATIONS_ENABLED=true. ' +
-        "Generate a random token: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""
+    process.stderr.write(
+      '[@yowu-dev/requarks-wiki-mcp] WARNING: WIKI_MUTATION_CONFIRM_TOKEN is not set. ' +
+        'Mutation token validation will be skipped. ' +
+        "For production use, generate a random token: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"\n"
     )
   }
 

@@ -72,9 +72,11 @@ describe('loadConfig', () => {
     assert.equal(loadConfig().mutationsEnabled, true)
   })
 
-  it('throws when mutations enabled without confirm token', () => {
+  it('allows mutations enabled without confirm token', () => {
     setEnv({ WIKI_MUTATIONS_ENABLED: 'true' })
-    assert.throws(() => loadConfig(), /WIKI_MUTATION_CONFIRM_TOKEN/)
+    const cfg = loadConfig()
+    assert.equal(cfg.mutationsEnabled, true)
+    assert.equal(cfg.mutationConfirmToken, '')
   })
 
   it('parses WIKI_MUTATION_DRY_RUN=false', () => {

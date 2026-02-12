@@ -8,7 +8,7 @@ import {
 } from '../errors.js'
 
 const inputSchema = z.object({
-  confirm: z.string(),
+  confirm: z.string().optional().default(''),
   id: z.number().int().positive()
 })
 
@@ -107,14 +107,18 @@ export const deletePageTool: ToolModule = {
   definition: {
     name: 'wikijs_delete_page',
     description:
-      'Delete a page by ID. Requires WIKI_MUTATIONS_ENABLED=true, confirm token, and may need manage:pages or delete:pages permission.',
+      'Delete a page by ID. Requires WIKI_MUTATIONS_ENABLED=true and may need manage:pages or delete:pages permission. confirm is only checked when WIKI_MUTATION_CONFIRM_TOKEN is set.',
     inputSchema: {
       type: 'object',
       properties: {
-        confirm: { type: 'string', description: 'Must match WIKI_MUTATION_CONFIRM_TOKEN.' },
+        confirm: {
+          type: 'string',
+          description:
+            'Must match WIKI_MUTATION_CONFIRM_TOKEN if set. Optional when token is not configured.'
+        },
         id: { type: 'number', description: 'Page ID to delete.' }
       },
-      required: ['confirm', 'id'],
+      required: ['id'],
       additionalProperties: false
     }
   },
