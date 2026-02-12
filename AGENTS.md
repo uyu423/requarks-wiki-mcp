@@ -87,6 +87,7 @@ requarks-wiki-mcp/
 - **NEVER push** — only humans push. No `git push` under any circumstances.
 - **Format**: `type: summary that explains why, not just what` — future AI agents read these to understand context.
 - **Prefixes**: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`, `ci:`.
+- **Before committing** — run `npm run lint:fix && npm run format && npm run check`. If any errors remain after auto-fix, read the output and fix manually.
 
 ## CONVENTIONS
 
