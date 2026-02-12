@@ -112,6 +112,7 @@ requarks-wiki-mcp/
 
 ## WIKI.JS API QUIRKS
 
+- **GraphQL API docs** — https://github.com/requarks/wiki-docs/blob/master/dev/api.md
 - **Error code 6013** = `PageViewForbidden`. Fix: verify group permissions + page rules for `read:pages`/`read:source`.
 - **Error code 6003** = page does not exist. Classified as `WikiNotFoundError`.
 - **Reading `content` field** may require `read:source` permission (not just `read:pages`).
