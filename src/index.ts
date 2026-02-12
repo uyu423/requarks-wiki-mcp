@@ -4,7 +4,10 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
-  type CallToolRequest
+  ListResourcesRequestSchema,
+  ReadResourceRequestSchema,
+  type CallToolRequest,
+  type ReadResourceRequest
 } from '@modelcontextprotocol/sdk/types.js'
 
 import { loadConfig } from './config.js'
@@ -12,6 +15,11 @@ import { createGraphQLClient } from './graphql.js'
 import { enforceMutationSafety, enforceMutationPath, auditMutation } from './safety.js'
 import { errorResult } from './errors.js'
 import { allTools } from './tools/registry.js'
+import {
+  markdownGuideResource,
+  markdownGuideContent,
+  MARKDOWN_GUIDE_URI
+} from './resources/markdownGuide.js'
 import type { ToolContext } from './types.js'
 
 const config = loadConfig()
@@ -25,21 +33,41 @@ const ctx: ToolContext = {
   auditMutation
 }
 
-const toolMap = new Map(allTools.map(t => [t.definition.name, t]))
+const toolMap = new Map(allTools.map((t) => [t.definition.name, t]))
 
 if (toolMap.size !== allTools.length) {
-  const names = allTools.map(t => t.definition.name)
+  const names = allTools.map((t) => t.definition.name)
   const dupes = names.filter((n, i) => names.indexOf(n) !== i)
   throw new Error(`Duplicate tool names detected: ${dupes.join(', ')}`)
 }
 
 const server = new Server(
   { name: '@yowu-dev/requarks-wiki-mcp', version: '0.2.0' },
-  { capabilities: { tools: {} } }
+  { capabilities: { tools: {}, resources: {} } }
 )
 
 server.setRequestHandler(ListToolsRequestSchema, async () => {
-  return { tools: allTools.map(t => t.definition) }
+  return { tools: allTools.map((t) => t.definition) }
+})
+
+server.setRequestHandler(ListResourcesRequestSchema, async () => {
+  return { resources: [markdownGuideResource] }
+})
+
+server.setRequestHandler(ReadResourceRequestSchema, async (request: ReadResourceRequest) => {
+  const uri = request.params.uri
+  if (uri === MARKDOWN_GUIDE_URI) {
+    return {
+      contents: [
+        {
+          uri: MARKDOWN_GUIDE_URI,
+          mimeType: 'text/markdown',
+          text: markdownGuideContent
+        }
+      ]
+    }
+  }
+  return { contents: [], isError: true }
 })
 
 server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest) => {
@@ -64,7 +92,7 @@ async function main() {
   await server.connect(transport)
 }
 
-main().catch(err => {
+main().catch((err) => {
   const msg = err instanceof Error ? err.message : String(err)
   process.stderr.write(`[@yowu-dev/requarks-wiki-mcp] startup failed: ${msg}\n`)
   process.exit(1)

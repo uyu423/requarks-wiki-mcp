@@ -23,8 +23,8 @@ function csvEnv(name: string): string[] {
   }
   return raw
     .split(',')
-    .map(item => normalizePathValue(item))
-    .filter(item => item.length > 0)
+    .map((item) => normalizePathValue(item))
+    .filter((item) => item.length > 0)
 }
 
 function normalizePathValue(path: string): string {
@@ -52,7 +52,7 @@ export function loadConfig(): WikiConfig {
   if (mutationsEnabled && !mutationConfirmToken) {
     throw new Error(
       'WIKI_MUTATION_CONFIRM_TOKEN must be explicitly set when WIKI_MUTATIONS_ENABLED=true. ' +
-      'Generate a random token: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"'
+        "Generate a random token: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""
     )
   }
 

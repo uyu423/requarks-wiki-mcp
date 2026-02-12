@@ -55,7 +55,10 @@ export const searchPagesTool: ToolModule = {
       type: 'object',
       properties: {
         query: { type: 'string', description: 'Search keyword.' },
-        locale: { type: 'string', description: 'Optional locale code. Defaults to WIKI_DEFAULT_LOCALE.' },
+        locale: {
+          type: 'string',
+          description: 'Optional locale code. Defaults to WIKI_DEFAULT_LOCALE.'
+        },
         path: { type: 'string', description: 'Optional path prefix to scope search.' }
       },
       required: ['query'],

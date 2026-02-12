@@ -1,11 +1,7 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { ZodError } from 'zod'
-import {
-  WikiNotFoundError,
-  WikiMutationDisabledError,
-  formatErrorForLLM
-} from '../src/errors.js'
+import { WikiNotFoundError, WikiMutationDisabledError, formatErrorForLLM } from '../src/errors.js'
 
 describe('formatErrorForLLM - ZodError', () => {
   it('formats ZodError with field paths', () => {

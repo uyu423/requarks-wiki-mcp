@@ -39,7 +39,8 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
       const dryRunResult = {
         dryRun: true,
         operation: 'delete',
-        message: 'Mutation dry-run is enabled. Set WIKI_MUTATION_DRY_RUN=false to perform delete operations.',
+        message:
+          'Mutation dry-run is enabled. Set WIKI_MUTATION_DRY_RUN=false to perform delete operations.',
         target: { id: input.id, path: targetPath }
       }
       ctx.auditMutation('delete', dryRunResult)
@@ -102,7 +103,8 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
 export const deletePageTool: ToolModule = {
   definition: {
     name: 'wikijs_delete_page',
-    description: 'Delete a page by ID. Requires WIKI_MUTATIONS_ENABLED=true, confirm token, and may need manage:pages or delete:pages permission.',
+    description:
+      'Delete a page by ID. Requires WIKI_MUTATIONS_ENABLED=true, confirm token, and may need manage:pages or delete:pages permission.',
     inputSchema: {
       type: 'object',
       properties: {

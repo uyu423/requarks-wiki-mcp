@@ -52,7 +52,8 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
       const dryRunResult = {
         dryRun: true,
         operation: 'update',
-        message: 'Mutation dry-run is enabled. Set WIKI_MUTATION_DRY_RUN=false to perform write operations.',
+        message:
+          'Mutation dry-run is enabled. Set WIKI_MUTATION_DRY_RUN=false to perform write operations.',
         target: {
           id: input.id,
           path: targetPath,
@@ -123,18 +124,22 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
           } | null
         }
       }
-    }>(mutation, {
-      id: input.id,
-      content: input.content,
-      description: input.description,
-      editor: input.editor,
-      isPrivate: input.isPrivate,
-      isPublished: input.isPublished,
-      locale: input.locale,
-      path: input.path,
-      tags: input.tags,
-      title: input.title
-    }, { noRetry: true })
+    }>(
+      mutation,
+      {
+        id: input.id,
+        content: input.content,
+        description: input.description,
+        editor: input.editor,
+        isPrivate: input.isPrivate,
+        isPublished: input.isPublished,
+        locale: input.locale,
+        path: input.path,
+        tags: input.tags,
+        title: input.title
+      },
+      { noRetry: true }
+    )
 
     ctx.auditMutation('update', {
       dryRun: false,
@@ -164,14 +169,47 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
 export const updatePageTool: ToolModule = {
   definition: {
     name: 'wikijs_update_page',
-    description: 'Update an existing page by ID. Requires WIKI_MUTATIONS_ENABLED=true and confirm token.',
+    description:
+      'Update an existing page by ID. Requires WIKI_MUTATIONS_ENABLED=true and confirm token.',
     inputSchema: {
       type: 'object',
       properties: {
         confirm: { type: 'string', description: 'Must match WIKI_MUTATION_CONFIRM_TOKEN.' },
         id: { type: 'number', description: 'Page ID to update.' },
         title: { type: 'string' },
-        content: { type: 'string' },
+        content: {
+          type: 'string',
+          description: [
+            'Page content in Wiki.js-flavored Markdown (when editor is "markdown").',
+            'Supports CommonMark + GFM plus Wiki.js extensions:',
+            '',
+            'BLOCKQUOTE STYLES — colored callout boxes:',
+            '  > Note text',
+            '  {.is-info}       (blue)',
+            '  {.is-success}    (green)',
+            '  {.is-warning}    (yellow)',
+            '  {.is-danger}     (red)',
+            '',
+            'CONTENT TABS — {.tabset} on parent heading, child headings become tabs:',
+            '  ## Tabs {.tabset}',
+            '  ### First Tab',
+            '  Content...',
+            '  ### Second Tab',
+            '  Content...',
+            '',
+            'IMAGE DIMENSIONS — append =WIDTHxHEIGHT after URL:',
+            '  ![alt](/img.jpg =300x200)  ![alt](/img.jpg =100%x)',
+            '',
+            'DIAGRAMS — mermaid or plantuml fenced code blocks.',
+            'TABLE STYLE — {.dense} after table for compact rendering.',
+            'LIST STYLES — {.grid-list} or {.links-list} after list.',
+            'TEXT — ~sub~  ^super^  <kbd>Key</kbd>  ~~strike~~',
+            'FOOTNOTES — [^1] inline, [^1]: definition at bottom.',
+            'DECORATE — <!-- {element:.class} --> for ambiguous targets.',
+            '',
+            'For the full syntax reference, read the wikijs://markdown-guide resource.'
+          ].join('\n')
+        },
         description: { type: 'string' },
         path: { type: 'string' },
         locale: { type: 'string' },

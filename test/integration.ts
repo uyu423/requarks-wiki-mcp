@@ -33,7 +33,7 @@ function warn(label: string, detail: string) {
 }
 
 function textOf(result: CallToolResult): string {
-  return result.content.map(c => c.text).join('\n')
+  return result.content.map((c) => c.text).join('\n')
 }
 
 function parseJson(result: CallToolResult): unknown {
@@ -43,9 +43,13 @@ function parseJson(result: CallToolResult): unknown {
   return JSON.parse(raw)
 }
 
-const toolMap = new Map(allTools.map(t => [t.definition.name, t]))
+const toolMap = new Map(allTools.map((t) => [t.definition.name, t]))
 
-async function call(ctx: ToolContext, name: string, args: Record<string, unknown>): Promise<CallToolResult> {
+async function call(
+  ctx: ToolContext,
+  name: string,
+  args: Record<string, unknown>
+): Promise<CallToolResult> {
   const tool = toolMap.get(name)
   if (!tool) throw new Error(`Unknown tool: ${name}`)
   return tool.handler(ctx, args)
@@ -87,7 +91,10 @@ async function main() {
     } else {
       anyPageId = data[0].id
       anyPagePath = data[0].path
-      ok('wikijs_list_pages', `${data.length} pages returned, first: id=${anyPageId} path="${anyPagePath}"`)
+      ok(
+        'wikijs_list_pages',
+        `${data.length} pages returned, first: id=${anyPageId} path="${anyPagePath}"`
+      )
       passed++
     }
   } catch (err) {
@@ -115,7 +122,10 @@ async function main() {
       const result = await call(ctx, 'wikijs_get_page_by_id', { id: anyPageId })
       if (result.isError) throw new Error(textOf(result))
       const data = parseJson(result) as { id: number; title: string; content: string }
-      ok('wikijs_get_page_by_id', `id=${data.id} title="${data.title}" content=${data.content.length} chars`)
+      ok(
+        'wikijs_get_page_by_id',
+        `id=${data.id} title="${data.title}" content=${data.content.length} chars`
+      )
       passed++
     } catch (err) {
       fail('wikijs_get_page_by_id', err)
@@ -134,7 +144,10 @@ async function main() {
       ok('wikijs_get_page_by_id (not found)', 'Correctly returns WikiNotFoundError')
       passed++
     } else {
-      warn('wikijs_get_page_by_id (not found)', 'Expected NotFound error but got: ' + textOf(result).slice(0, 100))
+      warn(
+        'wikijs_get_page_by_id (not found)',
+        'Expected NotFound error but got: ' + textOf(result).slice(0, 100)
+      )
       warnings++
     }
   } catch (err) {
@@ -168,7 +181,10 @@ async function main() {
       ok('wikijs_get_page_by_path (not found)', 'Correctly returns WikiNotFoundError')
       passed++
     } else {
-      warn('wikijs_get_page_by_path (not found)', 'Expected NotFound but got: ' + textOf(result).slice(0, 100))
+      warn(
+        'wikijs_get_page_by_path (not found)',
+        'Expected NotFound but got: ' + textOf(result).slice(0, 100)
+      )
       warnings++
     }
   } catch (err) {
@@ -297,7 +313,9 @@ async function main() {
       confirm: config.mutationConfirmToken,
       path: testPagePath,
       title: 'MCP Integration Test Page',
-      content: '# MCP Integration Test\n\nThis page was created by the integration test runner.\n\nTimestamp: ' + new Date().toISOString(),
+      content:
+        '# MCP Integration Test\n\nThis page was created by the integration test runner.\n\nTimestamp: ' +
+        new Date().toISOString(),
       tags: ['mcp-test', 'integration'],
       description: 'Auto-generated test page'
     })
@@ -311,7 +329,10 @@ async function main() {
       ok('wikijs_create_page (live)', `created id=${data.page.id} path="${data.page.path}"`)
       passed++
     } else {
-      warn('wikijs_create_page (live)', `succeeded=${data.responseResult.succeeded} message="${data.responseResult.message}"`)
+      warn(
+        'wikijs_create_page (live)',
+        `succeeded=${data.responseResult.succeeded} message="${data.responseResult.message}"`
+      )
       warnings++
     }
   } catch (err) {
@@ -351,7 +372,9 @@ async function main() {
         confirm: config.mutationConfirmToken,
         id: createdPageId,
         title: 'MCP Integration Test Page (Updated)',
-        content: '# MCP Integration Test (Updated)\n\nThis page was updated by the integration test runner.\n\nUpdated at: ' + new Date().toISOString()
+        content:
+          '# MCP Integration Test (Updated)\n\nThis page was updated by the integration test runner.\n\nUpdated at: ' +
+          new Date().toISOString()
       })
       if (result.isError) throw new Error(textOf(result))
       const data = parseJson(result) as {
@@ -443,13 +466,15 @@ async function main() {
 
   // ── Summary ──────────────────────────────────────────────────────
   console.log(`\n${'─'.repeat(60)}`)
-  console.log(`${GREEN}Passed: ${passed}${RESET}  ${RED}Failed: ${failed}${RESET}  ${YELLOW}Warnings: ${warnings}${RESET}`)
+  console.log(
+    `${GREEN}Passed: ${passed}${RESET}  ${RED}Failed: ${failed}${RESET}  ${YELLOW}Warnings: ${warnings}${RESET}`
+  )
   console.log(`${'─'.repeat(60)}\n`)
 
   if (failed > 0) process.exit(1)
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error('Integration test runner failed:', err)
   process.exit(1)
 })

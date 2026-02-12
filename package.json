@@ -30,6 +30,10 @@
     "dev": "tsx src/index.ts",
     "check": "tsc -p tsconfig.json --noEmit",
     "test": "node --import tsx --test test/*.test.ts",
+    "lint": "eslint src/ test/",
+    "lint:fix": "eslint src/ test/ --fix",
+    "format": "prettier --write 'src/**/*.ts' 'test/**/*.ts'",
+    "format:check": "prettier --check 'src/**/*.ts' 'test/**/*.ts'",
     "prepublishOnly": "npm run check && npm run build && npm test"
   },
   "keywords": [
@@ -47,8 +51,13 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "@types/node": "^20.17.17",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.8.1",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.55.0"
   }
 }

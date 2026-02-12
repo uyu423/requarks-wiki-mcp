@@ -51,7 +51,8 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
 export const getPageHistoryTool: ToolModule = {
   definition: {
     name: 'wikijs_get_page_history',
-    description: 'Get edit history trail for a page by ID. Returns version dates, authors, and change types.',
+    description:
+      'Get edit history trail for a page by ID. Returns version dates, authors, and change types.',
     inputSchema: {
       type: 'object',
       properties: {

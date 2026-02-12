@@ -64,13 +64,18 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
 export const getPageTreeTool: ToolModule = {
   definition: {
     name: 'wikijs_get_page_tree',
-    description: 'Get the page tree hierarchy for site navigation and structure discovery. Returns folders and/or pages with depth info.',
+    description:
+      'Get the page tree hierarchy for site navigation and structure discovery. Returns folders and/or pages with depth info.',
     inputSchema: {
       type: 'object',
       properties: {
         path: { type: 'string', description: 'Optional path prefix to scope the tree.' },
         parentId: { type: 'number', description: 'Optional parent page ID to get children of.' },
-        mode: { type: 'string', enum: ['FOLDERS', 'PAGES', 'ALL'], description: 'Tree mode. Default ALL.' },
+        mode: {
+          type: 'string',
+          enum: ['FOLDERS', 'PAGES', 'ALL'],
+          description: 'Tree mode. Default ALL.'
+        },
         locale: { type: 'string', description: 'Locale code. Defaults to WIKI_DEFAULT_LOCALE.' },
         includeAncestors: { type: 'boolean', description: 'Include ancestor pages. Default false.' }
       },

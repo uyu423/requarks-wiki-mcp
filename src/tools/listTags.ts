@@ -35,7 +35,8 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
 export const listTagsTool: ToolModule = {
   definition: {
     name: 'wikijs_list_tags',
-    description: 'List all tags used across wiki pages. Useful for discovering content categories and taxonomy.',
+    description:
+      'List all tags used across wiki pages. Useful for discovering content categories and taxonomy.',
     inputSchema: {
       type: 'object',
       properties: {},

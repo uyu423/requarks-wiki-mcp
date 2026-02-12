@@ -1,6 +1,10 @@
 import { timingSafeEqual } from 'node:crypto'
 import type { WikiConfig } from './types.js'
-import { WikiMutationDisabledError, WikiInvalidTokenError, WikiPathNotAllowedError } from './errors.js'
+import {
+  WikiMutationDisabledError,
+  WikiInvalidTokenError,
+  WikiPathNotAllowedError
+} from './errors.js'
 
 export function normalizeWikiPath(path: string): string {
   return path.trim().replace(/^\/+/, '').replace(/\/+$/, '')
@@ -31,7 +35,7 @@ export function enforceMutationPath(config: WikiConfig, path: string): void {
   }
 
   const normalizedPath = normalizeWikiPath(path)
-  const isAllowed = config.allowedMutationPathPrefixes.some(prefix => {
+  const isAllowed = config.allowedMutationPathPrefixes.some((prefix) => {
     return normalizedPath === prefix || normalizedPath.startsWith(`${prefix}/`)
   })
 
@@ -41,8 +45,14 @@ export function enforceMutationPath(config: WikiConfig, path: string): void {
 }
 
 const SENSITIVE_KEYS = new Set([
-  'apitoken', 'token', 'authorization', 'bearertoken',
-  'password', 'secret', 'credential', 'key'
+  'apitoken',
+  'token',
+  'authorization',
+  'bearertoken',
+  'password',
+  'secret',
+  'credential',
+  'key'
 ])
 
 function sanitizeDetails(obj: Record<string, unknown>): Record<string, unknown> {

@@ -128,75 +128,89 @@ export function classifyHttpStatus(status: number, body?: string): WikiError {
 
 export function formatErrorForLLM(err: unknown, context: string): CallToolResult {
   if (err instanceof WikiForbiddenError && String(err.code) === '6013') {
-    return errorResult([
-      `Permission Denied (Wiki.js Error 6013) while ${context}`,
-      '',
-      'What happened: The API token lacks permission to access this page.',
-      '',
-      'How to fix:',
-      '1. Verify the API key group has read:pages permission',
-      '2. Check page rules for read:source permission',
-      '3. Confirm the page path is not restricted for this group'
-    ].join('\n'))
+    return errorResult(
+      [
+        `Permission Denied (Wiki.js Error 6013) while ${context}`,
+        '',
+        'What happened: The API token lacks permission to access this page.',
+        '',
+        'How to fix:',
+        '1. Verify the API key group has read:pages permission',
+        '2. Check page rules for read:source permission',
+        '3. Confirm the page path is not restricted for this group'
+      ].join('\n')
+    )
   }
 
   if (err instanceof WikiAuthError) {
-    return errorResult([
-      `Authentication Failed while ${context}`,
-      '',
-      'The API token is invalid or expired. Check WIKI_API_TOKEN in your .env file.'
-    ].join('\n'))
+    return errorResult(
+      [
+        `Authentication Failed while ${context}`,
+        '',
+        'The API token is invalid or expired. Check WIKI_API_TOKEN in your .env file.'
+      ].join('\n')
+    )
   }
 
   if (err instanceof WikiNotFoundError) {
-    return errorResult([
-      `Not Found while ${context}`,
-      '',
-      err.message,
-      '',
-      'Verify the page path/ID exists and is accessible with your API key permissions.'
-    ].join('\n'))
+    return errorResult(
+      [
+        `Not Found while ${context}`,
+        '',
+        err.message,
+        '',
+        'Verify the page path/ID exists and is accessible with your API key permissions.'
+      ].join('\n')
+    )
   }
 
   if (err instanceof ZodError) {
-    const issues = err.issues.map(i => `  - ${i.path.join('.')}: ${i.message}`).join('\n')
-    return errorResult([
-      `Invalid Input while ${context}`,
-      '',
-      'The provided arguments failed validation:',
-      issues,
-      '',
-      'Check the tool input schema for required fields and types.'
-    ].join('\n'))
+    const issues = err.issues.map((i) => `  - ${i.path.join('.')}: ${i.message}`).join('\n')
+    return errorResult(
+      [
+        `Invalid Input while ${context}`,
+        '',
+        'The provided arguments failed validation:',
+        issues,
+        '',
+        'Check the tool input schema for required fields and types.'
+      ].join('\n')
+    )
   }
 
   if (err instanceof WikiRateLimitedError) {
-    return errorResult([
-      `Rate Limited while ${context}`,
-      '',
-      'Wiki.js is throttling requests. Wait a moment and try again.'
-    ].join('\n'))
+    return errorResult(
+      [
+        `Rate Limited while ${context}`,
+        '',
+        'Wiki.js is throttling requests. Wait a moment and try again.'
+      ].join('\n')
+    )
   }
 
   if (err instanceof WikiTransientError) {
-    return errorResult([
-      `Wiki.js Server Error while ${context}`,
-      '',
-      `${err.message}`,
-      '',
-      'This is a temporary server-side issue. Retry the operation.'
-    ].join('\n'))
+    return errorResult(
+      [
+        `Wiki.js Server Error while ${context}`,
+        '',
+        `${err.message}`,
+        '',
+        'This is a temporary server-side issue. Retry the operation.'
+      ].join('\n')
+    )
   }
 
   if (err instanceof WikiMutationDisabledError) {
-    return errorResult([
-      `Mutation Disabled: ${err.message}`,
-      '',
-      'To enable mutations:',
-      '1. Set WIKI_MUTATIONS_ENABLED=true in .env',
-      '2. Set WIKI_MUTATION_DRY_RUN=false for real writes',
-      '3. Provide the correct confirm token matching WIKI_MUTATION_CONFIRM_TOKEN'
-    ].join('\n'))
+    return errorResult(
+      [
+        `Mutation Disabled: ${err.message}`,
+        '',
+        'To enable mutations:',
+        '1. Set WIKI_MUTATIONS_ENABLED=true in .env',
+        '2. Set WIKI_MUTATION_DRY_RUN=false for real writes',
+        '3. Provide the correct confirm token matching WIKI_MUTATION_CONFIRM_TOKEN'
+      ].join('\n')
+    )
   }
 
   if (err instanceof WikiPathNotAllowedError) {

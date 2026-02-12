@@ -1,7 +1,11 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { normalizeWikiPath, enforceMutationSafety, enforceMutationPath } from '../src/safety.js'
-import { WikiMutationDisabledError, WikiInvalidTokenError, WikiPathNotAllowedError } from '../src/errors.js'
+import {
+  WikiMutationDisabledError,
+  WikiInvalidTokenError,
+  WikiPathNotAllowedError
+} from '../src/errors.js'
 import type { WikiConfig } from '../src/types.js'
 
 function makeConfig(overrides: Partial<WikiConfig> = {}): WikiConfig {

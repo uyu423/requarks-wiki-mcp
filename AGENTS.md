@@ -97,7 +97,7 @@ requarks-wiki-mcp/
 - **Full handler try/catch** — entire handler body (including Zod parse, mutation safety, path resolution) wrapped in single try/catch calling `formatErrorForLLM()`.
 - **Mutations use `noRetry: true`** — writes are never retried by the GraphQL client. Auto-detected: queries starting with `mutation` also skip retry.
 - **Null → WikiNotFoundError** — `getPageById`/`getPageByPath` throw `WikiNotFoundError` when page is null, not stringify `null`.
-- **No linter/formatter configured** — follow existing style: 2-space indent, single quotes, no semicolons.
+- **ESLint + Prettier enforced** — 2-space indent, single quotes, no semicolons. Run `npm run lint` and `npm run format:check` before committing.
 - **ESM only** — `"type": "module"`. Use `.js` extensions in all relative imports.
 - **Audit logging** — mutations log structured JSON to stderr. Token/secret redaction in `auditMutation()`.
 
@@ -166,6 +166,8 @@ npm run build    # Compile TypeScript → dist/
 npm start        # Run compiled server (node dist/index.js)
 npm run check    # Type check without emitting
 npm test         # Run 54 unit tests (node:test)
+npm run lint     # ESLint check (lint:fix to auto-fix)
+npm run format:check  # Prettier check (format to auto-fix)
 ```
 
 ## NOTES

@@ -34,7 +34,11 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
       }
     `
 
-    const data = await ctx.graphql<{ pages: { list: PageListItem[] } }>(query, { limit, offset, locale })
+    const data = await ctx.graphql<{ pages: { list: PageListItem[] } }>(query, {
+      limit,
+      offset,
+      locale
+    })
     return textResult(JSON.stringify(data.pages.list, null, 2))
   } catch (err) {
     return formatErrorForLLM(err, 'list pages')
