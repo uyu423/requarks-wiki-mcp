@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import type { ToolModule, ToolContext } from '../types.js'
-import { textResult, formatErrorForLLM } from '../errors.js'
+import { textResult, errorResult, formatErrorForLLM } from '../errors.js'
 
 const inputSchema = z.object({
   confirm: z.string(),
@@ -115,8 +115,18 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
       message: data.pages.create.responseResult.message
     })
 
+    if (!data.pages.create.responseResult.succeeded) {
+      return errorResult(
+        `Wiki.js create failed: ${data.pages.create.responseResult.message} (code ${data.pages.create.responseResult.errorCode})`
+      )
+    }
+
     return textResult(JSON.stringify(data.pages.create, null, 2))
   } catch (err) {
+    ctx.auditMutation('create', {
+      succeeded: false,
+      error: err instanceof Error ? err.message : String(err)
+    })
     return formatErrorForLLM(err, 'create page')
   }
 }

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import type { ToolModule, ToolContext } from '../types.js'
-import { textResult, formatErrorForLLM } from '../errors.js'
+import { textResult, errorResult, formatErrorForLLM } from '../errors.js'
 
 const inputSchema = z.object({
   confirm: z.string(),
@@ -83,8 +83,18 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
       message: data.pages.delete.responseResult.message
     })
 
+    if (!data.pages.delete.responseResult.succeeded) {
+      return errorResult(
+        `Wiki.js delete failed: ${data.pages.delete.responseResult.message} (code ${data.pages.delete.responseResult.errorCode})`
+      )
+    }
+
     return textResult(JSON.stringify(data.pages.delete, null, 2))
   } catch (err) {
+    ctx.auditMutation('delete', {
+      succeeded: false,
+      error: err instanceof Error ? err.message : String(err)
+    })
     return formatErrorForLLM(err, 'delete page')
   }
 }

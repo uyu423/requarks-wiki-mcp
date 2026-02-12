@@ -65,10 +65,11 @@ export class WikiInvalidTokenError extends WikiError {
 
 export class WikiPathNotAllowedError extends WikiError {
   constructor(path: string, allowedPrefixes: string[]) {
-    super(
-      `Path '${path}' is not allowed for mutation. Allowed prefixes: ${allowedPrefixes.join(', ')}`
-    )
+    super(`Path '${path}' is not within the allowed mutation paths.`)
     this.name = 'WikiPathNotAllowedError'
+    process.stderr.write(
+      `[@yowu-dev/requarks-wiki-mcp] path_denied: "${path}" not in [${allowedPrefixes.join(', ')}]\n`
+    )
   }
 }
 

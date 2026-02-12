@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import type { ToolModule, ToolContext } from '../types.js'
-import { textResult, formatErrorForLLM } from '../errors.js'
+import { textResult, errorResult, formatErrorForLLM } from '../errors.js'
 
 const inputSchema = z.object({
   confirm: z.string(),
@@ -41,8 +41,12 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
     const input = inputSchema.parse(raw)
     ctx.enforceMutationSafety(input.confirm)
 
-    const targetPath = input.path ?? (await getPagePathById(ctx, input.id))
-    ctx.enforceMutationPath(targetPath)
+    const currentPath = await getPagePathById(ctx, input.id)
+    ctx.enforceMutationPath(currentPath)
+    if (input.path && input.path !== currentPath) {
+      ctx.enforceMutationPath(input.path)
+    }
+    const targetPath = input.path ?? currentPath
 
     if (ctx.config.mutationDryRun) {
       const dryRunResult = {
@@ -128,7 +132,7 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
       isPublished: input.isPublished,
       locale: input.locale,
       path: input.path,
-      tags: input.tags ?? [],
+      tags: input.tags,
       title: input.title
     }, { noRetry: true })
 
@@ -141,8 +145,18 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
       message: data.pages.update.responseResult.message
     })
 
+    if (!data.pages.update.responseResult.succeeded) {
+      return errorResult(
+        `Wiki.js update failed: ${data.pages.update.responseResult.message} (code ${data.pages.update.responseResult.errorCode})`
+      )
+    }
+
     return textResult(JSON.stringify(data.pages.update, null, 2))
   } catch (err) {
+    ctx.auditMutation('update', {
+      succeeded: false,
+      error: err instanceof Error ? err.message : String(err)
+    })
     return formatErrorForLLM(err, 'update page')
   }
 }

@@ -52,7 +52,7 @@ export function createGraphQLClient(config: WikiConfig): GraphQLClient {
     options?: GraphQLOptions
   ): Promise<T> {
     const timeoutMs = options?.timeoutMs ?? config.httpTimeoutMs
-    const isMutation = query.trimStart().startsWith('mutation')
+    const isMutation = /^(\s|#[^\n]*\n)*mutation\b/.test(query)
     const maxRetries = options?.noRetry || isMutation ? 0 : config.httpMaxRetries
     const requestId = options?.requestId ?? generateRequestId()
 
@@ -86,6 +86,11 @@ export function createGraphQLClient(config: WikiConfig): GraphQLClient {
         const body = (await response.json()) as GraphQLResponseBody<T>
 
         if (body.errors && body.errors.length > 0) {
+          if (body.errors.length > 1) {
+            process.stderr.write(
+              `[@yowu-dev/requarks-wiki-mcp] ${body.errors.length} GraphQL errors returned; only first classified\n`
+            )
+          }
           throw classifyGraphQLError(body.errors[0])
         }
 

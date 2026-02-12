@@ -63,13 +63,18 @@ describe('loadConfig', () => {
   })
 
   it('parses WIKI_MUTATIONS_ENABLED=true', () => {
-    setEnv({ WIKI_MUTATIONS_ENABLED: 'true' })
+    setEnv({ WIKI_MUTATIONS_ENABLED: 'true', WIKI_MUTATION_CONFIRM_TOKEN: 'MY_SECRET' })
     assert.equal(loadConfig().mutationsEnabled, true)
   })
 
   it('parses WIKI_MUTATIONS_ENABLED=TRUE (case insensitive)', () => {
-    setEnv({ WIKI_MUTATIONS_ENABLED: 'TRUE' })
+    setEnv({ WIKI_MUTATIONS_ENABLED: 'TRUE', WIKI_MUTATION_CONFIRM_TOKEN: 'MY_SECRET' })
     assert.equal(loadConfig().mutationsEnabled, true)
+  })
+
+  it('throws when mutations enabled without confirm token', () => {
+    setEnv({ WIKI_MUTATIONS_ENABLED: 'true' })
+    assert.throws(() => loadConfig(), /WIKI_MUTATION_CONFIRM_TOKEN/)
   })
 
   it('parses WIKI_MUTATION_DRY_RUN=false', () => {

@@ -46,14 +46,24 @@ function intEnv(name: string, fallback: number, min: number): number {
 }
 
 export function loadConfig(): WikiConfig {
+  const mutationsEnabled = optionalEnv('WIKI_MUTATIONS_ENABLED', 'false').toLowerCase() === 'true'
+  const mutationConfirmToken = optionalEnv('WIKI_MUTATION_CONFIRM_TOKEN', '')
+
+  if (mutationsEnabled && !mutationConfirmToken) {
+    throw new Error(
+      'WIKI_MUTATION_CONFIRM_TOKEN must be explicitly set when WIKI_MUTATIONS_ENABLED=true. ' +
+      'Generate a random token: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"'
+    )
+  }
+
   return {
     baseUrl: requiredEnv('WIKI_BASE_URL').replace(/\/$/, ''),
     graphPath: normalizeGraphPath(optionalEnv('WIKI_GRAPHQL_PATH', '/graphql')),
     apiToken: requiredEnv('WIKI_API_TOKEN'),
     defaultLocale: optionalEnv('WIKI_DEFAULT_LOCALE', 'en'),
     defaultEditor: optionalEnv('WIKI_DEFAULT_EDITOR', 'markdown'),
-    mutationsEnabled: optionalEnv('WIKI_MUTATIONS_ENABLED', 'false').toLowerCase() === 'true',
-    mutationConfirmToken: optionalEnv('WIKI_MUTATION_CONFIRM_TOKEN', 'CONFIRM_UPDATE'),
+    mutationsEnabled,
+    mutationConfirmToken: mutationConfirmToken || 'CONFIRM_UPDATE',
     mutationDryRun: optionalEnv('WIKI_MUTATION_DRY_RUN', 'true').toLowerCase() === 'true',
     allowedMutationPathPrefixes: csvEnv('WIKI_ALLOWED_MUTATION_PATH_PREFIXES'),
     httpTimeoutMs: intEnv('WIKI_HTTP_TIMEOUT_MS', 15000, 1),
