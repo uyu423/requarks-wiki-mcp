@@ -1,0 +1,54 @@
+{
+  "name": "requarks-wiki-mcp",
+  "version": "0.2.0",
+  "description": "MCP server for Wiki.js knowledge-base read/write operations",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "requarks-wiki-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/uyu423/requarks-wiki-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/uyu423/requarks-wiki-mcp/issues"
+  },
+  "homepage": "https://github.com/uyu423/requarks-wiki-mcp#readme",
+  "author": "uyu423",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test": "node --import tsx --test test/*.test.ts",
+    "prepublishOnly": "npm run check && npm run build && npm test"
+  },
+  "keywords": [
+    "mcp",
+    "wikijs",
+    "knowledge-base",
+    "rag"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.18.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.17",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}
