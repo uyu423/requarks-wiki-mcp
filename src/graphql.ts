@@ -52,7 +52,7 @@ export function createGraphQLClient(config: WikiConfig): GraphQLClient {
     options?: GraphQLOptions
   ): Promise<T> {
     const timeoutMs = options?.timeoutMs ?? config.httpTimeoutMs
-    const isMutation = /^(\s|#[^\n]*\n)*mutation\b/.test(query)
+    const isMutation = /^[\s\uFEFF]*(#[^\n]*\n[\s]*|\/\*[\s\S]*?\*\/[\s]*)*mutation\b/.test(query)
     const maxRetries = options?.noRetry || isMutation ? 0 : config.httpMaxRetries
     const requestId = options?.requestId ?? generateRequestId()
 

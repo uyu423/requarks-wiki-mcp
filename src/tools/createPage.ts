@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import type { ToolModule, ToolContext } from '../types.js'
 import { textResult, errorResult, formatErrorForLLM } from '../errors.js'
+import { normalizeWikiPath } from '../safety.js'
 
 const inputSchema = z.object({
   confirm: z.string(),
@@ -19,7 +20,8 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
   try {
     const input = inputSchema.parse(raw)
     ctx.enforceMutationSafety(input.confirm)
-    ctx.enforceMutationPath(input.path)
+    const normalizedPath = normalizeWikiPath(input.path)
+    ctx.enforceMutationPath(normalizedPath)
 
     if (ctx.config.mutationDryRun) {
       const dryRunResult = {
@@ -28,7 +30,7 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
         message:
           'Mutation dry-run is enabled. Set WIKI_MUTATION_DRY_RUN=false to perform write operations.',
         target: {
-          path: input.path,
+          path: normalizedPath,
           locale: input.locale ?? ctx.config.defaultLocale,
           title: input.title
         }
@@ -104,7 +106,7 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
         isPublished: input.isPublished ?? true,
         isPrivate: input.isPrivate ?? false,
         locale: input.locale ?? ctx.config.defaultLocale,
-        path: input.path,
+        path: normalizedPath,
         tags: input.tags ?? [],
         title: input.title
       },

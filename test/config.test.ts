@@ -55,7 +55,7 @@ describe('loadConfig', () => {
     assert.equal(cfg.defaultLocale, 'en')
     assert.equal(cfg.defaultEditor, 'markdown')
     assert.equal(cfg.mutationsEnabled, false)
-    assert.equal(cfg.mutationConfirmToken, 'CONFIRM_UPDATE')
+    assert.equal(cfg.mutationConfirmToken, '')
     assert.equal(cfg.mutationDryRun, true)
     assert.deepEqual(cfg.allowedMutationPathPrefixes, [])
     assert.equal(cfg.httpTimeoutMs, 15000)

@@ -24,7 +24,7 @@ export function enforceMutationSafety(config: WikiConfig, confirm: string): void
   if (!config.mutationsEnabled) {
     throw new WikiMutationDisabledError()
   }
-  if (!safeTokenCompare(confirm, config.mutationConfirmToken)) {
+  if (!config.mutationConfirmToken || !safeTokenCompare(confirm, config.mutationConfirmToken)) {
     throw new WikiInvalidTokenError()
   }
 }
@@ -60,7 +60,13 @@ function sanitizeDetails(obj: Record<string, unknown>): Record<string, unknown> 
   for (const [k, v] of Object.entries(obj)) {
     if (SENSITIVE_KEYS.has(k.toLowerCase())) {
       result[k] = '[REDACTED]'
-    } else if (v !== null && typeof v === 'object' && !Array.isArray(v)) {
+    } else if (Array.isArray(v)) {
+      result[k] = v.map(item =>
+        item !== null && typeof item === 'object' && !Array.isArray(item)
+          ? sanitizeDetails(item as Record<string, unknown>)
+          : item
+      )
+    } else if (v !== null && typeof v === 'object') {
       result[k] = sanitizeDetails(v as Record<string, unknown>)
     } else {
       result[k] = v

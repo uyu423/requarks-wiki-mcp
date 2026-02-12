@@ -67,8 +67,9 @@ export class WikiPathNotAllowedError extends WikiError {
   constructor(path: string, allowedPrefixes: string[]) {
     super(`Path '${path}' is not within the allowed mutation paths.`)
     this.name = 'WikiPathNotAllowedError'
+    const sanitizedPath = path.replace(/[\r\n]/g, '\\n')
     process.stderr.write(
-      `[@yowu-dev/requarks-wiki-mcp] path_denied: "${path}" not in [${allowedPrefixes.join(', ')}]\n`
+      `[@yowu-dev/requarks-wiki-mcp] path_denied: "${sanitizedPath}" (${allowedPrefixes.length} prefixes configured)\n`
     )
   }
 }

@@ -63,7 +63,7 @@ export function loadConfig(): WikiConfig {
     defaultLocale: optionalEnv('WIKI_DEFAULT_LOCALE', 'en'),
     defaultEditor: optionalEnv('WIKI_DEFAULT_EDITOR', 'markdown'),
     mutationsEnabled,
-    mutationConfirmToken: mutationConfirmToken || 'CONFIRM_UPDATE',
+    mutationConfirmToken,
     mutationDryRun: optionalEnv('WIKI_MUTATION_DRY_RUN', 'true').toLowerCase() === 'true',
     allowedMutationPathPrefixes: csvEnv('WIKI_ALLOWED_MUTATION_PATH_PREFIXES'),
     httpTimeoutMs: intEnv('WIKI_HTTP_TIMEOUT_MS', 15000, 1),
