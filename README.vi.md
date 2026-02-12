@@ -3,6 +3,7 @@
 Máy chủ MCP cho [Wiki.js](https://js.wiki/), cho phép dùng Wiki.js như một kho tri thức.
 
 Tính năng:
+
 - Tìm kiếm và liệt kê trang cho luồng truy xuất kiểu RAG
 - Lấy nội dung theo path hoặc page ID
 - Tạo/cập nhật trang (tùy chọn) với cơ chế an toàn rõ ràng
@@ -37,19 +38,20 @@ WIKI_ALLOWED_MUTATION_PATH_PREFIXES=
 
 Mô tả biến môi trường:
 
-| Biến | Bắt buộc | Mặc định | Mô tả |
-|---|---|---|---|
-| `WIKI_BASE_URL` | Có | - | URL gốc của Wiki.js |
-| `WIKI_API_TOKEN` | Có | - | JWT dùng cho `Authorization: Bearer ...` |
-| `WIKI_GRAPHQL_PATH` | Không | `/graphql` | Đường dẫn GraphQL ghép với base URL |
-| `WIKI_DEFAULT_LOCALE` | Không | `en` | Locale mặc định khi không truyền locale |
-| `WIKI_DEFAULT_EDITOR` | Không | `markdown` | Editor mặc định khi tạo trang |
-| `WIKI_MUTATIONS_ENABLED` | Không | `false` | Bật tool ghi khi đặt `true` |
-| `WIKI_MUTATION_CONFIRM_TOKEN` | Không | `CONFIRM_UPDATE` | Giá trị `confirm` bắt buộc cho thao tác ghi |
-| `WIKI_MUTATION_DRY_RUN` | Không | `true` | `true` thì chỉ trả về preview, không ghi thật |
-| `WIKI_ALLOWED_MUTATION_PATH_PREFIXES` | Không | `` (rỗng) | Danh sách prefix path được phép ghi (phân tách bằng dấu phẩy) |
+| Biến                                  | Bắt buộc | Mặc định         | Mô tả                                                         |
+| ------------------------------------- | -------- | ---------------- | ------------------------------------------------------------- |
+| `WIKI_BASE_URL`                       | Có       | -                | URL gốc của Wiki.js                                           |
+| `WIKI_API_TOKEN`                      | Có       | -                | JWT dùng cho `Authorization: Bearer ...`                      |
+| `WIKI_GRAPHQL_PATH`                   | Không    | `/graphql`       | Đường dẫn GraphQL ghép với base URL                           |
+| `WIKI_DEFAULT_LOCALE`                 | Không    | `en`             | Locale mặc định khi không truyền locale                       |
+| `WIKI_DEFAULT_EDITOR`                 | Không    | `markdown`       | Editor mặc định khi tạo trang                                 |
+| `WIKI_MUTATIONS_ENABLED`              | Không    | `false`          | Bật tool ghi khi đặt `true`                                   |
+| `WIKI_MUTATION_CONFIRM_TOKEN`         | Không    | `CONFIRM_UPDATE` | Giá trị `confirm` bắt buộc cho thao tác ghi                   |
+| `WIKI_MUTATION_DRY_RUN`               | Không    | `true`           | `true` thì chỉ trả về preview, không ghi thật                 |
+| `WIKI_ALLOWED_MUTATION_PATH_PREFIXES` | Không    | `` (rỗng)        | Danh sách prefix path được phép ghi (phân tách bằng dấu phẩy) |
 
 Điều kiện tiên quyết trong Wiki.js (GraphQL + API key):
+
 - MCP này dùng GraphQL của Wiki.js ở bên trong.
 - Trong Wiki.js admin, vào `Administration -> API` và bật API.
 - Tạo API key và gán vào `WIKI_API_TOKEN`.
@@ -76,9 +78,9 @@ Mô tả biến môi trường:
         "WIKI_GRAPHQL_PATH": "/graphql",
         "WIKI_DEFAULT_LOCALE": "en",
         "WIKI_DEFAULT_EDITOR": "markdown",
-        "WIKI_MUTATIONS_ENABLED": "false",
+        "WIKI_MUTATIONS_ENABLED": "true",
         "WIKI_MUTATION_CONFIRM_TOKEN": "CONFIRM_UPDATE",
-        "WIKI_MUTATION_DRY_RUN": "true",
+        "WIKI_MUTATION_DRY_RUN": "false",
         "WIKI_ALLOWED_MUTATION_PATH_PREFIXES": ""
       }
     }
@@ -100,9 +102,9 @@ Ví dụ cho local/phát triển (chạy `dist` trực tiếp, không cần cài
         "WIKI_GRAPHQL_PATH": "/graphql",
         "WIKI_DEFAULT_LOCALE": "en",
         "WIKI_DEFAULT_EDITOR": "markdown",
-        "WIKI_MUTATIONS_ENABLED": "false",
-        "WIKI_MUTATION_CONFIRM_TOKEN": "CONFIRM_UPDATE",
-        "WIKI_MUTATION_DRY_RUN": "true",
+        "WIKI_MUTATIONS_ENABLED": "true",
+        "WIKI_MUTATION_CONFIRM_TOKEN": "",
+        "WIKI_MUTATION_DRY_RUN": "false",
         "WIKI_ALLOWED_MUTATION_PATH_PREFIXES": ""
       }
     }
@@ -128,12 +130,14 @@ npm start
 ## MCP Tools
 
 Tool đọc:
+
 - `wikijs_search_pages`
 - `wikijs_list_pages`
 - `wikijs_get_page_by_path`
 - `wikijs_get_page_by_id`
 
 Tool ghi (chỉ khi `WIKI_MUTATIONS_ENABLED=true`):
+
 - `wikijs_create_page`
 - `wikijs_update_page`
 
@@ -142,21 +146,25 @@ Thao tác ghi yêu cầu `confirm` khớp `WIKI_MUTATION_CONFIRM_TOKEN`.
 ## Kịch bản sử dụng (mô phỏng hành vi người dùng)
 
 Kịch bản 1) Điều tra nguyên nhân lỗi (kiểu RAG)
+
 - Yêu cầu người dùng: "Tìm tài liệu về Kotlin `CancellationException` và tóm tắt ngắn giúp tôi"
 - Chuỗi gọi MCP: `wikijs_search_pages(query="kotlin cancellationexception")` -> `wikijs_get_page_by_path(path=ket_qua.path)`
 - Kết quả: tìm đúng trang liên quan và lấy nội dung để tóm tắt nguyên nhân/cách xử lý.
 
 Kịch bản 2) Xem tài liệu mới cập nhật
+
 - Yêu cầu người dùng: "Cho tôi 20 trang cập nhật gần nhất"
 - Chuỗi gọi MCP: `wikijs_list_pages(limit=20, locale="en")`
 - Kết quả: trả về `path/title/updatedAt` để lập báo cáo thay đổi nhanh.
 
 Kịch bản 3) Đọc trực tiếp theo ID
+
 - Yêu cầu người dùng: "Đọc trang ID 7283 và trích riêng phần TODO"
 - Chuỗi gọi MCP: `wikijs_get_page_by_id(id=7283)`
 - Kết quả: lấy đúng nội dung trang và trích thông tin cần thiết.
 
 Kịch bản 4) Tạo nội dung với bước xem trước an toàn
+
 - Yêu cầu người dùng: "Tạo checklist deploy trong `sandbox`"
 - Chuỗi gọi MCP (xem trước): `wikijs_create_page(..., confirm=token)` với `WIKI_MUTATION_DRY_RUN=true`
 - Chuỗi gọi MCP (ghi thật): cùng lệnh với `WIKI_MUTATION_DRY_RUN=false`

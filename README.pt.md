@@ -3,6 +3,7 @@
 Servidor MCP para uma instância de [Wiki.js](https://js.wiki/) que permite usar o Wiki como base de conhecimento.
 
 Recursos:
+
 - Busca e listagem de páginas para fluxos de recuperação (estilo RAG)
 - Leitura de página por caminho ou ID
 - Criação/atualização opcionais com guardrails de segurança
@@ -37,19 +38,20 @@ WIKI_ALLOWED_MUTATION_PATH_PREFIXES=
 
 Referência de variáveis de ambiente:
 
-| Variável | Obrigatória | Padrão | Descrição |
-|---|---|---|---|
-| `WIKI_BASE_URL` | Sim | - | URL base do Wiki.js |
-| `WIKI_API_TOKEN` | Sim | - | JWT usado em `Authorization: Bearer ...` |
-| `WIKI_GRAPHQL_PATH` | Não | `/graphql` | Caminho GraphQL anexado ao base URL |
-| `WIKI_DEFAULT_LOCALE` | Não | `en` | Locale padrão para chamadas sem locale |
-| `WIKI_DEFAULT_EDITOR` | Não | `markdown` | Editor padrão para criação de página |
-| `WIKI_MUTATIONS_ENABLED` | Não | `false` | Habilita ferramentas de escrita quando `true` |
-| `WIKI_MUTATION_CONFIRM_TOKEN` | Não | `CONFIRM_UPDATE` | Valor `confirm` exigido para mutações |
-| `WIKI_MUTATION_DRY_RUN` | Não | `true` | Retorna preview sem gravar quando `true` |
-| `WIKI_ALLOWED_MUTATION_PATH_PREFIXES` | Não | `` (vazio) | Prefixos de caminho permitidos para escrita |
+| Variável                              | Obrigatória | Padrão           | Descrição                                     |
+| ------------------------------------- | ----------- | ---------------- | --------------------------------------------- |
+| `WIKI_BASE_URL`                       | Sim         | -                | URL base do Wiki.js                           |
+| `WIKI_API_TOKEN`                      | Sim         | -                | JWT usado em `Authorization: Bearer ...`      |
+| `WIKI_GRAPHQL_PATH`                   | Não         | `/graphql`       | Caminho GraphQL anexado ao base URL           |
+| `WIKI_DEFAULT_LOCALE`                 | Não         | `en`             | Locale padrão para chamadas sem locale        |
+| `WIKI_DEFAULT_EDITOR`                 | Não         | `markdown`       | Editor padrão para criação de página          |
+| `WIKI_MUTATIONS_ENABLED`              | Não         | `false`          | Habilita ferramentas de escrita quando `true` |
+| `WIKI_MUTATION_CONFIRM_TOKEN`         | Não         | `CONFIRM_UPDATE` | Valor `confirm` exigido para mutações         |
+| `WIKI_MUTATION_DRY_RUN`               | Não         | `true`           | Retorna preview sem gravar quando `true`      |
+| `WIKI_ALLOWED_MUTATION_PATH_PREFIXES` | Não         | `` (vazio)       | Prefixos de caminho permitidos para escrita   |
 
 Pré-requisito Wiki.js (GraphQL + chave de API):
+
 - Este MCP usa GraphQL do Wiki.js internamente.
 - Em Wiki.js, acesse `Administration -> API` e habilite a API.
 - Crie uma API key e defina em `WIKI_API_TOKEN`.
@@ -76,9 +78,9 @@ Pré-requisito Wiki.js (GraphQL + chave de API):
         "WIKI_GRAPHQL_PATH": "/graphql",
         "WIKI_DEFAULT_LOCALE": "en",
         "WIKI_DEFAULT_EDITOR": "markdown",
-        "WIKI_MUTATIONS_ENABLED": "false",
+        "WIKI_MUTATIONS_ENABLED": "true",
         "WIKI_MUTATION_CONFIRM_TOKEN": "CONFIRM_UPDATE",
-        "WIKI_MUTATION_DRY_RUN": "true",
+        "WIKI_MUTATION_DRY_RUN": "false",
         "WIKI_ALLOWED_MUTATION_PATH_PREFIXES": ""
       }
     }
@@ -100,9 +102,9 @@ Exemplo para local/desenvolvimento (executar `dist` sem instalar o pacote):
         "WIKI_GRAPHQL_PATH": "/graphql",
         "WIKI_DEFAULT_LOCALE": "en",
         "WIKI_DEFAULT_EDITOR": "markdown",
-        "WIKI_MUTATIONS_ENABLED": "false",
-        "WIKI_MUTATION_CONFIRM_TOKEN": "CONFIRM_UPDATE",
-        "WIKI_MUTATION_DRY_RUN": "true",
+        "WIKI_MUTATIONS_ENABLED": "true",
+        "WIKI_MUTATION_CONFIRM_TOKEN": "",
+        "WIKI_MUTATION_DRY_RUN": "false",
         "WIKI_ALLOWED_MUTATION_PATH_PREFIXES": ""
       }
     }
@@ -128,12 +130,14 @@ npm start
 ## Ferramentas MCP
 
 Leitura:
+
 - `wikijs_search_pages`
 - `wikijs_list_pages`
 - `wikijs_get_page_by_path`
 - `wikijs_get_page_by_id`
 
 Escrita (somente com `WIKI_MUTATIONS_ENABLED=true`):
+
 - `wikijs_create_page`
 - `wikijs_update_page`
 
@@ -142,21 +146,25 @@ Mutações exigem `confirm` igual a `WIKI_MUTATION_CONFIRM_TOKEN`.
 ## Cenários de uso (simulação de comportamento do usuário)
 
 Cenário 1) Investigar causa de erro (estilo RAG)
+
 - Pedido do usuário: "Encontre documentação sobre Kotlin `CancellationException` e me dê um resumo curto"
 - Sequência MCP: `wikijs_search_pages(query="kotlin cancellationexception")` -> `wikijs_get_page_by_path(path=resultado.path)`
 - Resultado: encontra páginas relevantes e recupera conteúdo para resumir causa e correção.
 
 Cenário 2) Ver mudanças recentes na documentação
+
 - Pedido do usuário: "Mostre as 20 páginas mais recentemente atualizadas"
 - Sequência MCP: `wikijs_list_pages(limit=20, locale="en")`
 - Resultado: retorna `path/title/updatedAt` para gerar um relatório rápido.
 
 Cenário 3) Consulta direta por ID
+
 - Pedido do usuário: "Leia a página 7283 e extraia apenas os TODO"
 - Sequência MCP: `wikijs_get_page_by_id(id=7283)`
 - Resultado: busca o conteúdo exato da página e extrai somente a informação necessária.
 
 Cenário 4) Criar conteúdo com revisão segura antes de aplicar
+
 - Pedido do usuário: "Crie um checklist de deploy em `sandbox`"
 - Sequência MCP (revisão): `wikijs_create_page(..., confirm=token)` com `WIKI_MUTATION_DRY_RUN=true`
 - Sequência MCP (aplicar): mesma chamada com `WIKI_MUTATION_DRY_RUN=false`

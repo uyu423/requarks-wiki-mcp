@@ -84,9 +84,9 @@ Wiki.js prerequisite (GraphQL + API key):
         "WIKI_GRAPHQL_PATH": "/graphql",
         "WIKI_DEFAULT_LOCALE": "en",
         "WIKI_DEFAULT_EDITOR": "markdown",
-        "WIKI_MUTATIONS_ENABLED": "false",
-        "WIKI_MUTATION_CONFIRM_TOKEN": "",
-        "WIKI_MUTATION_DRY_RUN": "true",
+        "WIKI_MUTATIONS_ENABLED": "true",
+        "WIKI_MUTATION_CONFIRM_TOKEN": "CONFIRM_UPDATE",
+        "WIKI_MUTATION_DRY_RUN": "false",
         "WIKI_ALLOWED_MUTATION_PATH_PREFIXES": "",
         "WIKI_HTTP_TIMEOUT_MS": "15000",
         "WIKI_HTTP_MAX_RETRIES": "2"
@@ -95,6 +95,48 @@ Wiki.js prerequisite (GraphQL + API key):
   }
 }
 ```
+
+## Register MCP Via Local Path (Without npm Publish)
+
+You can register this MCP server directly from your local project path without publishing/installing from npm.
+
+1. Build in this repository
+
+```bash
+npm install
+npm run build
+```
+
+2. Register local absolute path in `~/.mcp.json`
+
+```json
+{
+  "mcpServers": {
+    "requarks-wiki-local": {
+      "command": "node",
+      "args": ["/absolute/path/to/requarks-wiki-mcp/dist/index.js"],
+      "env": {
+        "WIKI_BASE_URL": "https://wiki.your-domain.dev",
+        "WIKI_API_TOKEN": "your_wikijs_api_key_jwt",
+        "WIKI_GRAPHQL_PATH": "/graphql",
+        "WIKI_DEFAULT_LOCALE": "en",
+        "WIKI_DEFAULT_EDITOR": "markdown",
+        "WIKI_MUTATIONS_ENABLED": "true",
+        "WIKI_MUTATION_CONFIRM_TOKEN": "",
+        "WIKI_MUTATION_DRY_RUN": "false",
+        "WIKI_ALLOWED_MUTATION_PATH_PREFIXES": "",
+        "WIKI_HTTP_TIMEOUT_MS": "15000",
+        "WIKI_HTTP_MAX_RETRIES": "2"
+      }
+    }
+  }
+}
+```
+
+Notes:
+
+- Always use an absolute path.
+- Re-run `npm run build` after code changes so `dist/index.js` stays up to date.
 
 ## Run
 

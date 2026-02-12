@@ -3,6 +3,7 @@
 [Wiki.js](https://js.wiki/) インスタンスをナレッジベースのように扱える MCP サーバーです。
 
 主な機能:
+
 - RAG 風ワークフロー向けのページ検索/一覧
 - パスまたはページ ID で本文取得
 - 明示的な安全ガード付きのページ作成/更新（任意）
@@ -39,19 +40,20 @@ WIKI_ALLOWED_MUTATION_PATH_PREFIXES=
 
 環境変数リファレンス:
 
-| 変数 | 必須 | デフォルト | 説明 |
-|---|---|---|---|
-| `WIKI_BASE_URL` | はい | - | Wiki.js のベース URL（例: `https://wiki.example.com`） |
-| `WIKI_API_TOKEN` | はい | - | `Authorization: Bearer ...` で使う API キー JWT |
-| `WIKI_GRAPHQL_PATH` | いいえ | `/graphql` | `WIKI_BASE_URL` に連結される GraphQL パス |
-| `WIKI_DEFAULT_LOCALE` | いいえ | `en` | 入力で locale 未指定時に使うデフォルト locale |
-| `WIKI_DEFAULT_EDITOR` | いいえ | `markdown` | ページ作成時のデフォルト editor |
-| `WIKI_MUTATIONS_ENABLED` | いいえ | `false` | `true` で書き込みツールを有効化 |
-| `WIKI_MUTATION_CONFIRM_TOKEN` | いいえ | `CONFIRM_UPDATE` | 変更系呼び出しで必要な `confirm` 値 |
-| `WIKI_MUTATION_DRY_RUN` | いいえ | `true` | `true` の場合はプレビューのみ返却し実書き込みしない |
-| `WIKI_ALLOWED_MUTATION_PATH_PREFIXES` | いいえ | `` (空) | 変更を許可するパスプレフィックス（カンマ区切り） |
+| 変数                                  | 必須   | デフォルト       | 説明                                                   |
+| ------------------------------------- | ------ | ---------------- | ------------------------------------------------------ |
+| `WIKI_BASE_URL`                       | はい   | -                | Wiki.js のベース URL（例: `https://wiki.example.com`） |
+| `WIKI_API_TOKEN`                      | はい   | -                | `Authorization: Bearer ...` で使う API キー JWT        |
+| `WIKI_GRAPHQL_PATH`                   | いいえ | `/graphql`       | `WIKI_BASE_URL` に連結される GraphQL パス              |
+| `WIKI_DEFAULT_LOCALE`                 | いいえ | `en`             | 入力で locale 未指定時に使うデフォルト locale          |
+| `WIKI_DEFAULT_EDITOR`                 | いいえ | `markdown`       | ページ作成時のデフォルト editor                        |
+| `WIKI_MUTATIONS_ENABLED`              | いいえ | `false`          | `true` で書き込みツールを有効化                        |
+| `WIKI_MUTATION_CONFIRM_TOKEN`         | いいえ | `CONFIRM_UPDATE` | 変更系呼び出しで必要な `confirm` 値                    |
+| `WIKI_MUTATION_DRY_RUN`               | いいえ | `true`           | `true` の場合はプレビューのみ返却し実書き込みしない    |
+| `WIKI_ALLOWED_MUTATION_PATH_PREFIXES` | いいえ | `` (空)          | 変更を許可するパスプレフィックス（カンマ区切り）       |
 
 Wiki.js の前提条件（GraphQL + API キー）:
+
 - この MCP は内部で Wiki.js GraphQL を利用します。
 - Wiki.js 管理画面の `Administration -> API` で API を有効化してください。
 - API キーを発行し、`WIKI_API_TOKEN` に設定してください。
@@ -78,9 +80,9 @@ Wiki.js の前提条件（GraphQL + API キー）:
         "WIKI_GRAPHQL_PATH": "/graphql",
         "WIKI_DEFAULT_LOCALE": "en",
         "WIKI_DEFAULT_EDITOR": "markdown",
-        "WIKI_MUTATIONS_ENABLED": "false",
+        "WIKI_MUTATIONS_ENABLED": "true",
         "WIKI_MUTATION_CONFIRM_TOKEN": "CONFIRM_UPDATE",
-        "WIKI_MUTATION_DRY_RUN": "true",
+        "WIKI_MUTATION_DRY_RUN": "false",
         "WIKI_ALLOWED_MUTATION_PATH_PREFIXES": ""
       }
     }
@@ -102,9 +104,9 @@ Wiki.js の前提条件（GraphQL + API キー）:
         "WIKI_GRAPHQL_PATH": "/graphql",
         "WIKI_DEFAULT_LOCALE": "en",
         "WIKI_DEFAULT_EDITOR": "markdown",
-        "WIKI_MUTATIONS_ENABLED": "false",
-        "WIKI_MUTATION_CONFIRM_TOKEN": "CONFIRM_UPDATE",
-        "WIKI_MUTATION_DRY_RUN": "true",
+        "WIKI_MUTATIONS_ENABLED": "true",
+        "WIKI_MUTATION_CONFIRM_TOKEN": "",
+        "WIKI_MUTATION_DRY_RUN": "false",
         "WIKI_ALLOWED_MUTATION_PATH_PREFIXES": ""
       }
     }
@@ -130,12 +132,14 @@ npm start
 ## MCP ツール
 
 読み取りツール:
+
 - `wikijs_search_pages`
 - `wikijs_list_pages`
 - `wikijs_get_page_by_path`
 - `wikijs_get_page_by_id`
 
 書き込みツール（`WIKI_MUTATIONS_ENABLED=true` のときのみ）:
+
 - `wikijs_create_page`
 - `wikijs_update_page`
 
@@ -146,21 +150,25 @@ npm start
 ## 利用シナリオ（ユーザー行動シミュレーション）
 
 シナリオ 1) エラー原因の調査（RAG スタイル）
+
 - ユーザー依頼: 「Kotlin の `CancellationException` 関連ドキュメントを探して要点をまとめて」
 - MCP 呼び出し順: `wikijs_search_pages(query="kotlin cancellationexception")` -> `wikijs_get_page_by_path(path=検索結果.path)`
 - 結果: 関連ページを検索し、本文を取得して原因/対処を要約できる。
 
 シナリオ 2) 最近更新された文書の確認
+
 - ユーザー依頼: 「最近更新された文書を上位 20 件見せて」
 - MCP 呼び出し順: `wikijs_list_pages(limit=20, locale="en")`
 - 結果: `path/title/updatedAt` をもとに更新レポートを作成できる。
 
 シナリオ 3) ページ ID 指定の直接参照
+
 - ユーザー依頼: 「ページ ID 7283 を読んで TODO だけ抽出して」
 - MCP 呼び出し順: `wikijs_get_page_by_id(id=7283)`
 - 結果: 特定ページの本文を直接取得し、必要情報のみ抽出できる。
 
 シナリオ 4) 安全な事前確認つきページ作成
+
 - ユーザー依頼: 「`sandbox` にデプロイチェックリストを作って」
 - MCP 呼び出し順（確認）: `wikijs_create_page(..., confirm=token)` with `WIKI_MUTATION_DRY_RUN=true`
 - MCP 呼び出し順（反映）: 同じ呼び出し with `WIKI_MUTATION_DRY_RUN=false`

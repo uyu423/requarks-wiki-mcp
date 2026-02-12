@@ -3,6 +3,7 @@
 [Wiki.js](https://js.wiki/) 인스턴스를 지식 베이스처럼 사용할 수 있게 해주는 MCP 서버입니다.
 
 주요 기능:
+
 - 검색/목록 도구로 RAG 형태의 조회 워크플로우 지원
 - 경로 또는 페이지 ID로 페이지 본문 조회
 - 명시적 안전장치가 있는 선택적 페이지 생성/수정 도구
@@ -39,19 +40,20 @@ WIKI_ALLOWED_MUTATION_PATH_PREFIXES=
 
 환경 변수 설명:
 
-| 변수 | 필수 | 기본값 | 설명 |
-|---|---|---|---|
-| `WIKI_BASE_URL` | 예 | - | Wiki.js 기본 URL (예: `https://wiki.example.com`) |
-| `WIKI_API_TOKEN` | 예 | - | `Authorization: Bearer ...`에 사용되는 Wiki.js API 키 JWT |
-| `WIKI_GRAPHQL_PATH` | 아니오 | `/graphql` | `WIKI_BASE_URL` 뒤에 붙는 GraphQL 경로 |
-| `WIKI_DEFAULT_LOCALE` | 아니오 | `en` | 도구 입력에 locale이 없을 때 사용할 기본 locale |
-| `WIKI_DEFAULT_EDITOR` | 아니오 | `markdown` | 페이지 생성 시 editor 미지정일 때 기본 editor |
-| `WIKI_MUTATIONS_ENABLED` | 아니오 | `false` | `true`일 때 쓰기 도구 활성화 |
-| `WIKI_MUTATION_CONFIRM_TOKEN` | 아니오 | `CONFIRM_UPDATE` | 쓰기 호출 시 `confirm` 값으로 반드시 일치해야 하는 토큰 |
-| `WIKI_MUTATION_DRY_RUN` | 아니오 | `true` | `true`면 실제 반영 없이 미리보기만 반환 |
-| `WIKI_ALLOWED_MUTATION_PATH_PREFIXES` | 아니오 | `` (비어 있음) | 쓰기를 허용할 경로 prefix 목록(쉼표 구분) |
+| 변수                                  | 필수   | 기본값           | 설명                                                      |
+| ------------------------------------- | ------ | ---------------- | --------------------------------------------------------- |
+| `WIKI_BASE_URL`                       | 예     | -                | Wiki.js 기본 URL (예: `https://wiki.example.com`)         |
+| `WIKI_API_TOKEN`                      | 예     | -                | `Authorization: Bearer ...`에 사용되는 Wiki.js API 키 JWT |
+| `WIKI_GRAPHQL_PATH`                   | 아니오 | `/graphql`       | `WIKI_BASE_URL` 뒤에 붙는 GraphQL 경로                    |
+| `WIKI_DEFAULT_LOCALE`                 | 아니오 | `en`             | 도구 입력에 locale이 없을 때 사용할 기본 locale           |
+| `WIKI_DEFAULT_EDITOR`                 | 아니오 | `markdown`       | 페이지 생성 시 editor 미지정일 때 기본 editor             |
+| `WIKI_MUTATIONS_ENABLED`              | 아니오 | `false`          | `true`일 때 쓰기 도구 활성화                              |
+| `WIKI_MUTATION_CONFIRM_TOKEN`         | 아니오 | `CONFIRM_UPDATE` | 쓰기 호출 시 `confirm` 값으로 반드시 일치해야 하는 토큰   |
+| `WIKI_MUTATION_DRY_RUN`               | 아니오 | `true`           | `true`면 실제 반영 없이 미리보기만 반환                   |
+| `WIKI_ALLOWED_MUTATION_PATH_PREFIXES` | 아니오 | `` (비어 있음)   | 쓰기를 허용할 경로 prefix 목록(쉼표 구분)                 |
 
 Wiki.js 사전 조건 (GraphQL + API 키):
+
 - 이 MCP는 내부적으로 Wiki.js GraphQL을 사용합니다.
 - Wiki.js 관리자 화면 `Administration -> API`에서 API를 활성화하세요.
 - API 키를 생성한 뒤 `WIKI_API_TOKEN`에 설정하세요.
@@ -78,9 +80,9 @@ Wiki.js 사전 조건 (GraphQL + API 키):
         "WIKI_GRAPHQL_PATH": "/graphql",
         "WIKI_DEFAULT_LOCALE": "en",
         "WIKI_DEFAULT_EDITOR": "markdown",
-        "WIKI_MUTATIONS_ENABLED": "false",
+        "WIKI_MUTATIONS_ENABLED": "true",
         "WIKI_MUTATION_CONFIRM_TOKEN": "CONFIRM_UPDATE",
-        "WIKI_MUTATION_DRY_RUN": "true",
+        "WIKI_MUTATION_DRY_RUN": "false",
         "WIKI_ALLOWED_MUTATION_PATH_PREFIXES": ""
       }
     }
@@ -88,7 +90,18 @@ Wiki.js 사전 조건 (GraphQL + API 키):
 }
 ```
 
-로컬/개발 환경에서 바로 쓰는 예시 (패키지 설치 없이 dist 실행):
+## 로컬 경로로 MCP 서버 등록 (npm 배포 없이 사용)
+
+로컬 개발시, 로컬 프로젝트 경로를 직접 `mcpServers`에 등록해 사용할 수 있습니다.
+
+1. 이 저장소에서 빌드
+
+```bash
+npm install
+npm run build
+```
+
+2. MCP 클라이언트 `~/.mcp.json`에 로컬 `dist/index.js` 절대 경로 등록
 
 ```json
 {
@@ -102,15 +115,20 @@ Wiki.js 사전 조건 (GraphQL + API 키):
         "WIKI_GRAPHQL_PATH": "/graphql",
         "WIKI_DEFAULT_LOCALE": "en",
         "WIKI_DEFAULT_EDITOR": "markdown",
-        "WIKI_MUTATIONS_ENABLED": "false",
-        "WIKI_MUTATION_CONFIRM_TOKEN": "CONFIRM_UPDATE",
-        "WIKI_MUTATION_DRY_RUN": "true",
+        "WIKI_MUTATIONS_ENABLED": "true",
+        "WIKI_MUTATION_CONFIRM_TOKEN": "",
+        "WIKI_MUTATION_DRY_RUN": "false",
         "WIKI_ALLOWED_MUTATION_PATH_PREFIXES": ""
       }
     }
   }
 }
 ```
+
+참고:
+
+- 경로는 반드시 절대 경로를 사용하세요.
+- 코드를 수정한 뒤에는 다시 `npm run build`를 실행해야 변경 사항이 반영됩니다.
 
 ## 실행
 
@@ -130,12 +148,14 @@ npm start
 ## MCP 도구
 
 읽기 도구:
+
 - `wikijs_search_pages`
 - `wikijs_list_pages`
 - `wikijs_get_page_by_path`
 - `wikijs_get_page_by_id`
 
 쓰기 도구 (`WIKI_MUTATIONS_ENABLED=true`일 때만 활성화):
+
 - `wikijs_create_page`
 - `wikijs_update_page`
 
@@ -147,21 +167,25 @@ npm start
 ## 작업 샘플 (사용자 행동 시뮬레이션)
 
 시나리오 1) 오류 원인 조사 (RAG 스타일)
+
 - 사용자 요청: "Kotlin `CancellationException` 관련 문서 찾아서 핵심만 요약해줘"
 - MCP 호출 순서: `wikijs_search_pages(query="kotlin cancellationexception")` -> `wikijs_get_page_by_path(path=검색결과 path)`
 - 결과: 관련 페이지를 찾고 본문을 가져와 요약/원인/해결 가이드를 답변에 사용
 
 시나리오 2) 운영 문서 최신 변경 확인
+
 - 사용자 요청: "최근 일주일 내 수정된 운영 문서 상위 20개 보여줘"
 - MCP 호출 순서: `wikijs_list_pages(limit=20, locale="en")`
 - 결과: 최신 문서 목록(path/title/updatedAt) 기반으로 변경 리포트 작성
 
 시나리오 3) 특정 문서 직접 조회
+
 - 사용자 요청: "페이지 ID 7283 내용 읽어서 TODO만 뽑아줘"
 - MCP 호출 순서: `wikijs_get_page_by_id(id=7283)`
 - 결과: 특정 문서 본문을 직접 읽고 필요한 항목만 추출
 
 시나리오 4) 안전한 문서 생성 검토 -> 실제 반영
+
 - 사용자 요청: "sandbox 경로에 배포 체크리스트 문서 만들어줘"
 - MCP 호출 순서(검토): `wikijs_create_page(..., confirm=토큰)` with `WIKI_MUTATION_DRY_RUN=true`
 - MCP 호출 순서(실행): 동일 호출 with `WIKI_MUTATION_DRY_RUN=false`
@@ -184,6 +208,7 @@ npm start
 ## 권한 참고 (Wiki.js)
 
 Wiki.js API 키 권한은 예상과 다를 수 있습니다.
+
 - 일부 작업은 페이지 규칙 수준에서 `manage:pages`/`delete:pages`가 추가로 필요할 수 있습니다.
 - `content` 읽기는 스키마/필드 체크에 따라 `read:source`가 필요할 수 있습니다.
 
@@ -192,11 +217,13 @@ Wiki.js API 키 권한은 예상과 다를 수 있습니다.
 ## 권장 최소 API 키 권한
 
 읽기 중심 KB 용도:
+
 - `read:pages`
 - `read:source`
 - 대상 경로/locale에 대한 페이지 규칙 허용
 
 쓰기 워크플로우:
+
 - `write:pages` (작업에 따라 `manage:pages` 추가 필요)
 
 ## 보안 가이드

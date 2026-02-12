@@ -61,7 +61,7 @@ function sanitizeDetails(obj: Record<string, unknown>): Record<string, unknown> 
     if (SENSITIVE_KEYS.has(k.toLowerCase())) {
       result[k] = '[REDACTED]'
     } else if (Array.isArray(v)) {
-      result[k] = v.map(item =>
+      result[k] = v.map((item) =>
         item !== null && typeof item === 'object' && !Array.isArray(item)
           ? sanitizeDetails(item as Record<string, unknown>)
           : item
