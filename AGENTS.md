@@ -2,7 +2,7 @@
 
 **Generated:** 2026-02-12
 **Commit:** 4a08ebe
-**Version:** 0.2.0
+**Version:** 0.2.1
 **Branch:** main
 
 ## OVERVIEW
@@ -47,39 +47,39 @@ requarks-wiki-mcp/
 
 ## WHERE TO LOOK
 
-| Task | Location | Notes |
-|------|----------|-------|
-| Add a new tool | `src/tools/` + `src/tools/registry.ts` | Create file exporting `ToolModule`, add to registry |
-| Tool definitions + handlers | `src/tools/*.ts` | Each exports `{ definition, handler }` |
-| Tool dispatch (Map-based) | `src/index.ts` | `toolMap.get(name)` — no switch statement |
-| Shared types | `src/types.ts` | WikiConfig, ToolContext, ToolModule, domain types |
-| Config / env vars | `src/config.ts` | `loadConfig()` — all env parsing centralized |
-| GraphQL client + retry | `src/graphql.ts` | `createGraphQLClient()` — timeout, retry, request ID |
-| Error taxonomy | `src/errors.ts` | WikiError hierarchy + `classifyGraphQLError/HttpStatus` |
-| LLM-friendly errors | `src/errors.ts` | `formatErrorForLLM()` — structured fix instructions |
-| Mutation safety | `src/safety.ts` | `enforceMutationSafety/Path()`, `auditMutation()` |
-| Tests | `test/*.test.ts` | `npm test` — node:test, 54 tests |
+| Task                        | Location                               | Notes                                                   |
+| --------------------------- | -------------------------------------- | ------------------------------------------------------- |
+| Add a new tool              | `src/tools/` + `src/tools/registry.ts` | Create file exporting `ToolModule`, add to registry     |
+| Tool definitions + handlers | `src/tools/*.ts`                       | Each exports `{ definition, handler }`                  |
+| Tool dispatch (Map-based)   | `src/index.ts`                         | `toolMap.get(name)` — no switch statement               |
+| Shared types                | `src/types.ts`                         | WikiConfig, ToolContext, ToolModule, domain types       |
+| Config / env vars           | `src/config.ts`                        | `loadConfig()` — all env parsing centralized            |
+| GraphQL client + retry      | `src/graphql.ts`                       | `createGraphQLClient()` — timeout, retry, request ID    |
+| Error taxonomy              | `src/errors.ts`                        | WikiError hierarchy + `classifyGraphQLError/HttpStatus` |
+| LLM-friendly errors         | `src/errors.ts`                        | `formatErrorForLLM()` — structured fix instructions     |
+| Mutation safety             | `src/safety.ts`                        | `enforceMutationSafety/Path()`, `auditMutation()`       |
+| Tests                       | `test/*.test.ts`                       | `npm test` — node:test, 54 tests                        |
 
 ## CODE MAP
 
-| Symbol | Type | File | Role |
-|--------|------|------|------|
-| `loadConfig` | function | config.ts | Parses all `WIKI_*` env vars → `WikiConfig` |
-| `createGraphQLClient` | function | graphql.ts | Factory: returns `wikiGraphQL()` closure with retry |
-| `WikiError` | class | errors.ts | Base error (8 subclasses: Auth, Forbidden, NotFound, Transient, RateLimited, MutationDisabled, InvalidToken, PathNotAllowed) |
-| `classifyGraphQLError` | function | errors.ts | GraphQL response → typed WikiError (special-cases 6013) |
-| `classifyHttpStatus` | function | errors.ts | HTTP status → typed WikiError (never leaks response body) |
-| `formatErrorForLLM` | function | errors.ts | Any error → MCP `CallToolResult` with fix instructions |
-| `textResult` / `errorResult` | function | errors.ts | MCP response helpers (`{ content: [{ type: 'text', text }] }`) |
-| `enforceMutationSafety` | function | safety.ts | Checks `mutationsEnabled` + confirm token |
-| `enforceMutationPath` | function | safety.ts | Validates path against allowed prefixes |
-| `auditMutation` | function | safety.ts | Structured JSON to stderr (redacts `apiToken`/`token`) |
-| `normalizeWikiPath` | function | safety.ts | Strips leading/trailing slashes + whitespace |
-| `allTools` | const | tools/registry.ts | `ToolModule[]` — single import for bootstrap |
-| `WikiConfig` | type | types.ts | 11-field config shape (baseUrl through httpMaxRetries) |
-| `ToolContext` | type | types.ts | DI container: config + graphql + safety functions |
-| `ToolModule` | type | types.ts | `{ definition: Tool, handler: (ctx, args) => CallToolResult }` |
-| `GraphQLClient` | type | types.ts | `<T>(query, variables, options?) => Promise<T>` |
+| Symbol                       | Type     | File              | Role                                                                                                                         |
+| ---------------------------- | -------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `loadConfig`                 | function | config.ts         | Parses all `WIKI_*` env vars → `WikiConfig`                                                                                  |
+| `createGraphQLClient`        | function | graphql.ts        | Factory: returns `wikiGraphQL()` closure with retry                                                                          |
+| `WikiError`                  | class    | errors.ts         | Base error (8 subclasses: Auth, Forbidden, NotFound, Transient, RateLimited, MutationDisabled, InvalidToken, PathNotAllowed) |
+| `classifyGraphQLError`       | function | errors.ts         | GraphQL response → typed WikiError (special-cases 6013)                                                                      |
+| `classifyHttpStatus`         | function | errors.ts         | HTTP status → typed WikiError (never leaks response body)                                                                    |
+| `formatErrorForLLM`          | function | errors.ts         | Any error → MCP `CallToolResult` with fix instructions                                                                       |
+| `textResult` / `errorResult` | function | errors.ts         | MCP response helpers (`{ content: [{ type: 'text', text }] }`)                                                               |
+| `enforceMutationSafety`      | function | safety.ts         | Checks `mutationsEnabled` + confirm token                                                                                    |
+| `enforceMutationPath`        | function | safety.ts         | Validates path against allowed prefixes                                                                                      |
+| `auditMutation`              | function | safety.ts         | Structured JSON to stderr (redacts `apiToken`/`token`)                                                                       |
+| `normalizeWikiPath`          | function | safety.ts         | Strips leading/trailing slashes + whitespace                                                                                 |
+| `allTools`                   | const    | tools/registry.ts | `ToolModule[]` — single import for bootstrap                                                                                 |
+| `WikiConfig`                 | type     | types.ts          | 11-field config shape (baseUrl through httpMaxRetries)                                                                       |
+| `ToolContext`                | type     | types.ts          | DI container: config + graphql + safety functions                                                                            |
+| `ToolModule`                 | type     | types.ts          | `{ definition: Tool, handler: (ctx, args) => CallToolResult }`                                                               |
+| `GraphQLClient`              | type     | types.ts          | `<T>(query, variables, options?) => Promise<T>`                                                                              |
 
 ## GIT RULES
 
