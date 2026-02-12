@@ -36,9 +36,9 @@ export function auditMutation(operation: string, details: Record<string, unknown
 
   const line = JSON.stringify({
     ts: new Date().toISOString(),
-    source: 'requarks-wiki-mcp',
+    source: '@yowu-dev/requarks-wiki-mcp',
     operation,
     details: sanitized
   })
-  process.stderr.write(`[requarks-wiki-mcp] mutation_audit ${line}\n`)
+  process.stderr.write(`[@yowu-dev/requarks-wiki-mcp] mutation_audit ${line}\n`)
 }

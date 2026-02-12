@@ -1,5 +1,5 @@
 {
-  "name": "requarks-wiki-mcp",
+  "name": "@yowu-dev/requarks-wiki-mcp",
   "version": "0.2.0",
   "description": "MCP server for Wiki.js knowledge-base read/write operations",
   "type": "module",
@@ -20,7 +20,7 @@
     "url": "https://github.com/uyu423/requarks-wiki-mcp/issues"
   },
   "homepage": "https://github.com/uyu423/requarks-wiki-mcp#readme",
-  "author": "uyu423",
+  "author": "yowu-dev",
   "publishConfig": {
     "access": "public"
   },

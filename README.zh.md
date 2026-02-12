@@ -69,7 +69,7 @@ Wiki.js 前置条件（GraphQL + API Key）：
   "mcpServers": {
     "requarks-wiki": {
       "command": "npx",
-      "args": ["-y", "requarks-wiki-mcp@latest"],
+      "args": ["-y", "@yowu-dev/requarks-wiki-mcp@latest"],
       "env": {
         "WIKI_BASE_URL": "https://wiki.your-domain.dev",
         "WIKI_API_TOKEN": "your_wikijs_api_key_jwt",

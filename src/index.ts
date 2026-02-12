@@ -34,7 +34,7 @@ if (toolMap.size !== allTools.length) {
 }
 
 const server = new Server(
-  { name: 'requarks-wiki-mcp', version: '0.2.0' },
+  { name: '@yowu-dev/requarks-wiki-mcp', version: '0.2.0' },
   { capabilities: { tools: {} } }
 )
 
@@ -66,6 +66,6 @@ async function main() {
 
 main().catch(err => {
   const msg = err instanceof Error ? err.message : String(err)
-  process.stderr.write(`[requarks-wiki-mcp] startup failed: ${msg}\n`)
+  process.stderr.write(`[@yowu-dev/requarks-wiki-mcp] startup failed: ${msg}\n`)
   process.exit(1)
 })
