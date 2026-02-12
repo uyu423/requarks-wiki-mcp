@@ -42,7 +42,7 @@ if (toolMap.size !== allTools.length) {
 }
 
 const server = new Server(
-  { name: '@yowu-dev/requarks-wiki-mcp', version: '0.2.1' },
+  { name: '@yowu-dev/requarks-wiki-mcp', version: '0.2.2' },
   { capabilities: { tools: {}, resources: {} } }
 )
 
