@@ -1,6 +1,12 @@
 import { z } from 'zod'
 import type { ToolModule, ToolContext } from '../types.js'
-import { textResult, errorResult, formatErrorForLLM } from '../errors.js'
+import {
+  textResult,
+  formatErrorForLLM,
+  classifyResponseResultError,
+  WikiNotFoundError
+} from '../errors.js'
+import { normalizeWikiPath } from '../safety.js'
 
 const inputSchema = z.object({
   confirm: z.string(),
@@ -31,7 +37,7 @@ async function getPagePathById(ctx: ToolContext, id: number): Promise<string> {
   }>(query, { id })
 
   if (!data.pages.single?.path) {
-    throw new Error(`Cannot resolve path for page id ${id}.`)
+    throw new WikiNotFoundError(`Cannot resolve path for page id ${id}.`)
   }
   return data.pages.single.path
 }
@@ -43,10 +49,11 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
 
     const currentPath = await getPagePathById(ctx, input.id)
     ctx.enforceMutationPath(currentPath)
-    if (input.path && input.path !== currentPath) {
-      ctx.enforceMutationPath(input.path)
+    const normalizedInputPath = input.path ? normalizeWikiPath(input.path) : undefined
+    if (normalizedInputPath && normalizedInputPath !== currentPath) {
+      ctx.enforceMutationPath(normalizedInputPath)
     }
-    const targetPath = input.path ?? currentPath
+    const targetPath = normalizedInputPath ?? currentPath
 
     if (ctx.config.mutationDryRun) {
       const dryRunResult = {
@@ -64,6 +71,9 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
       return textResult(JSON.stringify(dryRunResult, null, 2))
     }
 
+    // Wiki.js server crashes on tags: undefined (calls .map() on undefined),
+    // so we ALWAYS include tags in the mutation, defaulting to empty array.
+    // See: https://github.com/requarks/wiki-docs/blob/master/dev/api.md
     const mutation = `
       mutation UpdatePage(
         $id: Int!
@@ -107,6 +117,19 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
       }
     `
 
+    const variables: Record<string, unknown> = {
+      id: input.id,
+      content: input.content,
+      description: input.description,
+      editor: input.editor,
+      isPrivate: input.isPrivate,
+      isPublished: input.isPublished,
+      locale: input.locale,
+      path: normalizedInputPath,
+      tags: input.tags ?? [],
+      title: input.title
+    }
+
     const data = await ctx.graphql<{
       pages: {
         update: {
@@ -124,22 +147,7 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
           } | null
         }
       }
-    }>(
-      mutation,
-      {
-        id: input.id,
-        content: input.content,
-        description: input.description,
-        editor: input.editor,
-        isPrivate: input.isPrivate,
-        isPublished: input.isPublished,
-        locale: input.locale,
-        path: input.path,
-        tags: input.tags,
-        title: input.title
-      },
-      { noRetry: true }
-    )
+    }>(mutation, variables, { noRetry: true })
 
     ctx.auditMutation('update', {
       dryRun: false,
@@ -151,9 +159,7 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
     })
 
     if (!data.pages.update.responseResult.succeeded) {
-      return errorResult(
-        `Wiki.js update failed: ${data.pages.update.responseResult.message} (code ${data.pages.update.responseResult.errorCode})`
-      )
+      return classifyResponseResultError(data.pages.update.responseResult, 'update page')
     }
 
     return textResult(JSON.stringify(data.pages.update, null, 2))

@@ -4,9 +4,11 @@ import {
   WikiError,
   WikiAuthError,
   WikiForbiddenError,
+  WikiValidationError,
   WikiTransientError,
   WikiRateLimitedError,
   classifyGraphQLError,
+  classifyResponseResultError,
   classifyHttpStatus,
   formatErrorForLLM,
   textResult,
@@ -22,6 +24,73 @@ describe('classifyGraphQLError', () => {
     assert.ok(err instanceof WikiForbiddenError)
     assert.equal(err.code, 6013)
     assert.ok(err.message.includes('6013'))
+  })
+
+  it('returns WikiValidationError for code 6002 (PageDuplicateCreate)', () => {
+    const err = classifyGraphQLError({
+      message: 'Duplicate',
+      extensions: { code: 6002 }
+    })
+    assert.ok(err instanceof WikiValidationError)
+    assert.equal(err.code, 6002)
+    assert.ok(err.message.includes('6002'))
+  })
+
+  it('returns WikiValidationError for code 6004 (PageEmptyContent)', () => {
+    const err = classifyGraphQLError({
+      message: 'Empty',
+      extensions: { code: 6004 }
+    })
+    assert.ok(err instanceof WikiValidationError)
+    assert.equal(err.code, 6004)
+  })
+
+  it('returns WikiValidationError for code 6005 (PageIllegalPath)', () => {
+    const err = classifyGraphQLError({
+      message: 'Illegal',
+      extensions: { code: 6005 }
+    })
+    assert.ok(err instanceof WikiValidationError)
+    assert.equal(err.code, 6005)
+  })
+
+  it('returns WikiValidationError for code 6006 (PagePathCollision)', () => {
+    const err = classifyGraphQLError({
+      message: 'Collision',
+      extensions: { code: 6006 }
+    })
+    assert.ok(err instanceof WikiValidationError)
+    assert.equal(err.code, 6006)
+  })
+
+  it('returns WikiForbiddenError for codes 6008–6012', () => {
+    for (const code of [6008, 6009, 6010, 6011, 6012]) {
+      const err = classifyGraphQLError({
+        message: 'Forbidden',
+        extensions: { code }
+      })
+      assert.ok(err instanceof WikiForbiddenError, `Expected WikiForbiddenError for code ${code}`)
+      assert.equal(err.code, code)
+    }
+  })
+
+  it('returns WikiValidationError for code 6014 (PageNotYetRendered)', () => {
+    const err = classifyGraphQLError({
+      message: 'Not rendered',
+      extensions: { code: 6014 }
+    })
+    assert.ok(err instanceof WikiValidationError)
+    assert.equal(err.code, 6014)
+  })
+
+  it('returns WikiAuthError for 1xxx codes', () => {
+    for (const code of [1001, 1005, 1999]) {
+      const err = classifyGraphQLError({
+        message: 'Auth issue',
+        extensions: { code }
+      })
+      assert.ok(err instanceof WikiAuthError, `Expected WikiAuthError for code ${code}`)
+    }
   })
 
   it('returns WikiError for other codes', () => {
@@ -42,6 +111,37 @@ describe('classifyGraphQLError', () => {
   it('handles missing message', () => {
     const err = classifyGraphQLError({})
     assert.equal(err.message, 'Unknown GraphQL error')
+  })
+})
+
+describe('classifyResponseResultError', () => {
+  it('returns structured Validation Error for errorCode 6002', () => {
+    const result = classifyResponseResultError(
+      { errorCode: 6002, slug: 'PageDuplicateCreate', message: 'Page already exists' },
+      'create page'
+    )
+    assert.equal(result.isError, true)
+    assert.ok(result.content[0].text.includes('Validation Error'))
+    assert.ok(result.content[0].text.includes('create page'))
+  })
+
+  it('returns structured Permission Denied for errorCode 6008', () => {
+    const result = classifyResponseResultError(
+      { errorCode: 6008, slug: 'PageDeleteForbidden', message: 'Forbidden' },
+      'delete page'
+    )
+    assert.equal(result.isError, true)
+    assert.ok(result.content[0].text.includes('Permission Denied'))
+    assert.ok(result.content[0].text.includes('delete page'))
+  })
+
+  it('returns generic error for unknown errorCode', () => {
+    const result = classifyResponseResultError(
+      { errorCode: 9999, slug: 'Unknown', message: 'Something weird' },
+      'some operation'
+    )
+    assert.equal(result.isError, true)
+    assert.ok(result.content[0].text.includes('Something weird'))
   })
 })
 
@@ -106,6 +206,23 @@ describe('formatErrorForLLM', () => {
     const result = formatErrorForLLM(err, 'fetching')
     assert.equal(result.isError, true)
     assert.ok(result.content[0].text.includes('Server Error'))
+  })
+
+  it('formats WikiValidationError with validation message', () => {
+    const err = new WikiValidationError('Path collision', 6006)
+    const result = formatErrorForLLM(err, 'create page')
+    assert.equal(result.isError, true)
+    assert.ok(result.content[0].text.includes('Validation Error'))
+    assert.ok(result.content[0].text.includes('create page'))
+  })
+
+  it('formats WikiForbiddenError (non-6013) with permission message', () => {
+    const err = new WikiForbiddenError('Delete forbidden', 6008)
+    const result = formatErrorForLLM(err, 'delete page')
+    assert.equal(result.isError, true)
+    assert.ok(result.content[0].text.includes('Permission Denied'))
+    assert.ok(result.content[0].text.includes('6008'))
+    assert.ok(!result.content[0].text.includes('read:pages'))
   })
 
   it('formats generic error', () => {

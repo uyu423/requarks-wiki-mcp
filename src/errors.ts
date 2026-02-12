@@ -35,6 +35,13 @@ export class WikiNotFoundError extends WikiError {
   }
 }
 
+export class WikiValidationError extends WikiError {
+  constructor(message: string, code?: string | number) {
+    super(message, code ?? 'VALIDATION', 422)
+    this.name = 'WikiValidationError'
+  }
+}
+
 export class WikiTransientError extends WikiError {
   constructor(message: string, statusCode: number) {
     super(message, 'TRANSIENT', statusCode)
@@ -86,15 +93,80 @@ export function classifyGraphQLError(error: {
   const message = error.message ?? 'Unknown GraphQL error'
   const code = error.extensions?.exception?.code ?? error.extensions?.code
 
-  if (String(code) === '6003') {
+  const codeNum = code !== undefined ? Number(code) : undefined
+
+  // 6002: PageDuplicateCreate
+  if (codeNum === 6002) {
+    return new WikiValidationError(
+      `${message} (Wiki.js code 6002: PageDuplicateCreate — a page already exists at this path)`,
+      6002
+    )
+  }
+
+  // 6003: PageNotFound
+  if (codeNum === 6003) {
     return new WikiNotFoundError(`${message} (Wiki.js code 6003: page does not exist)`)
   }
 
-  if (String(code) === '6013') {
+  // 6004: PageEmptyContent
+  if (codeNum === 6004) {
+    return new WikiValidationError(
+      `${message} (Wiki.js code 6004: PageEmptyContent — page content must not be empty)`,
+      6004
+    )
+  }
+
+  // 6005: PageIllegalPath
+  if (codeNum === 6005) {
+    return new WikiValidationError(
+      `${message} (Wiki.js code 6005: PageIllegalPath — path contains invalid characters)`,
+      6005
+    )
+  }
+
+  // 6006: PagePathCollision
+  if (codeNum === 6006) {
+    return new WikiValidationError(
+      `${message} (Wiki.js code 6006: PagePathCollision — path conflicts with an existing page or folder)`,
+      6006
+    )
+  }
+
+  // 6008–6012: Permission denied variants
+  if (codeNum !== undefined && codeNum >= 6008 && codeNum <= 6012) {
+    const slugMap: Record<number, string> = {
+      6008: 'PageDeleteForbidden',
+      6009: 'PageMoveForbidden',
+      6010: 'PageCreateForbidden',
+      6011: 'PageUpdateForbidden',
+      6012: 'PageRestoreForbidden'
+    }
+    const slug = slugMap[codeNum] ?? 'PageForbidden'
+    return new WikiForbiddenError(
+      `${message} (Wiki.js code ${codeNum}: ${slug}). Check API-key group permissions.`,
+      codeNum
+    )
+  }
+
+  // 6013: PageViewForbidden
+  if (codeNum === 6013) {
     return new WikiForbiddenError(
       `${message} (code 6013: PageViewForbidden). Verify page rules and API-key group permissions for read:pages/read:source.`,
       6013
     )
+  }
+
+  // 6014: PageNotYetRendered
+  if (codeNum === 6014) {
+    return new WikiValidationError(
+      `${message} (Wiki.js code 6014: PageNotYetRendered — the page has not been rendered yet)`,
+      6014
+    )
+  }
+
+  // 1xxx: Authentication-related codes
+  if (codeNum !== undefined && codeNum >= 1000 && codeNum < 2000) {
+    return new WikiAuthError(`${message} (Wiki.js auth code ${codeNum})`)
   }
 
   if (code !== undefined) {
@@ -102,6 +174,17 @@ export function classifyGraphQLError(error: {
   }
 
   return new WikiError(message)
+}
+
+export function classifyResponseResultError(
+  responseResult: { errorCode: number; slug: string; message: string },
+  context: string
+): CallToolResult {
+  const classified = classifyGraphQLError({
+    message: responseResult.message,
+    extensions: { code: responseResult.errorCode }
+  })
+  return formatErrorForLLM(classified, context)
 }
 
 export function classifyHttpStatus(status: number, body?: string): WikiError {
@@ -128,6 +211,18 @@ export function classifyHttpStatus(status: number, body?: string): WikiError {
 // ── LLM-friendly error formatting for MCP responses ───────────────────
 
 export function formatErrorForLLM(err: unknown, context: string): CallToolResult {
+  if (err instanceof WikiValidationError) {
+    return errorResult(
+      [
+        `Validation Error while ${context}`,
+        '',
+        err.message,
+        '',
+        'Check the input values (path, content, locale) and try again.'
+      ].join('\n')
+    )
+  }
+
   if (err instanceof WikiForbiddenError && String(err.code) === '6013') {
     return errorResult(
       [
@@ -139,6 +234,18 @@ export function formatErrorForLLM(err: unknown, context: string): CallToolResult
         '1. Verify the API key group has read:pages permission',
         '2. Check page rules for read:source permission',
         '3. Confirm the page path is not restricted for this group'
+      ].join('\n')
+    )
+  }
+
+  if (err instanceof WikiForbiddenError) {
+    return errorResult(
+      [
+        `Permission Denied (Wiki.js Error ${String(err.code)}) while ${context}`,
+        '',
+        err.message,
+        '',
+        'Check that the API-key group has the required permission for this operation.'
       ].join('\n')
     )
   }

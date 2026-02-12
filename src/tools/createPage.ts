@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import type { ToolModule, ToolContext } from '../types.js'
-import { textResult, errorResult, formatErrorForLLM } from '../errors.js'
+import { textResult, formatErrorForLLM, classifyResponseResultError } from '../errors.js'
 import { normalizeWikiPath } from '../safety.js'
 
 const inputSchema = z.object({
@@ -123,9 +123,7 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
     })
 
     if (!data.pages.create.responseResult.succeeded) {
-      return errorResult(
-        `Wiki.js create failed: ${data.pages.create.responseResult.message} (code ${data.pages.create.responseResult.errorCode})`
-      )
+      return classifyResponseResultError(data.pages.create.responseResult, 'create page')
     }
 
     return textResult(JSON.stringify(data.pages.create, null, 2))

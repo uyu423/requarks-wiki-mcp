@@ -21,7 +21,12 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
             description
             contentType
             content
+            createdAt
             updatedAt
+            authorId
+            authorName
+            creatorId
+            creatorName
             tags {
               tag
             }
@@ -40,7 +45,12 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
           description: string
           contentType: string
           content: string
+          createdAt: string
           updatedAt: string
+          authorId: number | null
+          authorName: string | null
+          creatorId: number | null
+          creatorName: string | null
           tags: Array<{ tag: string }>
         } | null
       }

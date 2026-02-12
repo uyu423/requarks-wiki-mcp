@@ -1,6 +1,11 @@
 import { z } from 'zod'
 import type { ToolModule, ToolContext } from '../types.js'
-import { textResult, errorResult, formatErrorForLLM } from '../errors.js'
+import {
+  textResult,
+  formatErrorForLLM,
+  classifyResponseResultError,
+  WikiNotFoundError
+} from '../errors.js'
 
 const inputSchema = z.object({
   confirm: z.string(),
@@ -22,7 +27,7 @@ async function getPagePathById(ctx: ToolContext, id: number): Promise<string> {
   }>(query, { id })
 
   if (!data.pages.single?.path) {
-    throw new Error(`Cannot resolve path for page id ${id}.`)
+    throw new WikiNotFoundError(`Cannot resolve path for page id ${id}.`)
   }
   return data.pages.single.path
 }
@@ -85,9 +90,7 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
     })
 
     if (!data.pages.delete.responseResult.succeeded) {
-      return errorResult(
-        `Wiki.js delete failed: ${data.pages.delete.responseResult.message} (code ${data.pages.delete.responseResult.errorCode})`
-      )
+      return classifyResponseResultError(data.pages.delete.responseResult, 'delete page')
     }
 
     return textResult(JSON.stringify(data.pages.delete, null, 2))
