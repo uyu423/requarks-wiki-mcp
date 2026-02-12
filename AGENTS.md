@@ -81,6 +81,13 @@ requarks-wiki-mcp/
 | `ToolModule` | type | types.ts | `{ definition: Tool, handler: (ctx, args) => CallToolResult }` |
 | `GraphQLClient` | type | types.ts | `<T>(query, variables, options?) => Promise<T>` |
 
+## GIT RULES
+
+- **Commit per work unit** — commit automatically after each logical task completes.
+- **NEVER push** — only humans push. No `git push` under any circumstances.
+- **Format**: `type: summary that explains why, not just what` — future AI agents read these to understand context.
+- **Prefixes**: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`, `ci:`.
+
 ## CONVENTIONS
 
 - **One tool per file** — `src/tools/{name}.ts` exports `ToolModule = { definition, handler }`.
