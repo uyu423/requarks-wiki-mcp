@@ -1,0 +1,10 @@
+src/
+test/
+.github/
+.env*
+*.test.ts
+tsconfig.json
+AGENTS.md
+README.*.md
+.sisyphus
+.omc
