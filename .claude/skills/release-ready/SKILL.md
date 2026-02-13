@@ -101,11 +101,11 @@ Create a release commit and tag. **Do NOT push.**
 
 ```bash
 git add package.json package-lock.json src/index.ts AGENTS.md
-git commit -m "release: vX.Y.Z"
+git commit -m "chore(release): vX.Y.Z"
 git tag vX.Y.Z
 ```
 
-Commit message format: `release: v{version}` (matches existing pattern).
+Commit message format: `chore(release): v{version}` (Conventional Commits standard).
 
 ## Step 8: Summary
 

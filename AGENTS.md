@@ -85,8 +85,9 @@ requarks-wiki-mcp/
 
 - **Commit per work unit** — commit automatically after each logical task completes.
 - **NEVER push** — only humans push. No `git push` under any circumstances.
-- **Format**: `type: summary that explains why, not just what` — future AI agents read these to understand context.
-- **Prefixes**: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`, `ci:`.
+- **Format**: `type(scope): summary that explains why, not just what` — [Conventional Commits](https://www.conventionalcommits.org/) spec. Scope is optional.
+- **Types**: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `ci`, `perf`, `build`, `style`.
+- **Release commits**: `chore(release): vX.Y.Z` — the `release:` prefix is non-standard; always use `chore(release):` instead.
 - **Before committing** — run `npm run lint:fix && npm run format && npm run check`. If any errors remain after auto-fix, read the output and fix manually.
 
 ## CONVENTIONS
