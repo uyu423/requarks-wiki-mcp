@@ -19,7 +19,11 @@ const inputSchema = z.object({
   editor: z.string().optional(),
   tags: z.array(z.string()).optional(),
   isPublished: z.boolean().optional(),
-  isPrivate: z.boolean().optional()
+  isPrivate: z.boolean().optional(),
+  publishStartDate: z.string().optional(),
+  publishEndDate: z.string().optional(),
+  scriptCss: z.string().optional(),
+  scriptJs: z.string().optional()
 })
 
 async function getPagePathById(ctx: ToolContext, id: number): Promise<string> {
@@ -86,6 +90,10 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
         $path: String
         $tags: [String]
         $title: String
+        $publishStartDate: Date
+        $publishEndDate: Date
+        $scriptCss: String
+        $scriptJs: String
       ) {
         pages {
           update(
@@ -99,6 +107,10 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
             path: $path
             tags: $tags
             title: $title
+            publishStartDate: $publishStartDate
+            publishEndDate: $publishEndDate
+            scriptCss: $scriptCss
+            scriptJs: $scriptJs
           ) {
             responseResult {
               succeeded
@@ -127,7 +139,11 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
       locale: input.locale,
       path: normalizedInputPath,
       tags: input.tags ?? [],
-      title: input.title
+      title: input.title,
+      publishStartDate: input.publishStartDate,
+      publishEndDate: input.publishEndDate,
+      scriptCss: input.scriptCss,
+      scriptJs: input.scriptJs
     }
 
     const data = await ctx.graphql<{
@@ -226,7 +242,11 @@ export const updatePageTool: ToolModule = {
         editor: { type: 'string' },
         tags: { type: 'array', items: { type: 'string' } },
         isPublished: { type: 'boolean' },
-        isPrivate: { type: 'boolean' }
+        isPrivate: { type: 'boolean' },
+        publishStartDate: { type: 'string', description: 'Publication start date (ISO 8601 format).' },
+        publishEndDate: { type: 'string', description: 'Publication end date (ISO 8601 format).' },
+        scriptCss: { type: 'string', description: 'Custom CSS for the page.' },
+        scriptJs: { type: 'string', description: 'Custom JavaScript for the page.' }
       },
       required: ['id'],
       additionalProperties: false

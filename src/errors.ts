@@ -164,6 +164,28 @@ export function classifyGraphQLError(error: {
     )
   }
 
+  // 8xxx: Comment-related codes
+  if (codeNum !== undefined && codeNum >= 8000 && codeNum < 9000) {
+    const commentSlugMap: Record<number, string> = {
+      8001: 'CommentGenericError',
+      8002: 'CommentPostForbidden',
+      8003: 'CommentNotFound',
+      8004: 'CommentViewForbidden',
+      8005: 'CommentManageForbidden'
+    }
+    const slug = commentSlugMap[codeNum] ?? 'CommentError'
+    if (codeNum === 8003) {
+      return new WikiNotFoundError(`${message} (Wiki.js code ${codeNum}: ${slug})`)
+    }
+    if (codeNum === 8002 || codeNum === 8004 || codeNum === 8005) {
+      return new WikiForbiddenError(
+        `${message} (Wiki.js code ${codeNum}: ${slug}). Check API-key group permissions for comments.`,
+        codeNum
+      )
+    }
+    return new WikiValidationError(`${message} (Wiki.js code ${codeNum}: ${slug})`, codeNum)
+  }
+
   // 1xxx: Authentication-related codes
   if (codeNum !== undefined && codeNum >= 1000 && codeNum < 2000) {
     return new WikiAuthError(`${message} (Wiki.js auth code ${codeNum})`)

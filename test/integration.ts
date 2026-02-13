@@ -1,5 +1,5 @@
 /**
- * Integration test — runs all 10 MCP tools against a live Wiki.js instance.
+ * Integration test — runs all 29 MCP tools against a live Wiki.js instance.
  *
  * Usage:
  *   WIKI_BASE_URL=... WIKI_API_TOKEN=... npx tsx test/integration.ts
@@ -77,9 +77,11 @@ async function main() {
   let anyPagePath: string | null = null
   let createdPageId: number | null = null
   const testPagePath = `mcp-test/integration-${Date.now()}`
+  let pageHistoryVersionId: number | null = null
+  let firstCommentId: number | null = null
 
   // ── 1. wikijs_list_pages ─────────────────────────────────────────
-  console.log(`\n${CYAN}[1/10] wikijs_list_pages${RESET}`)
+  console.log(`\n${CYAN}[1/29] wikijs_list_pages${RESET}`)
   try {
     const result = await call(ctx, 'wikijs_list_pages', { limit: 5 })
     if (result.isError) throw new Error(textOf(result))
@@ -103,7 +105,7 @@ async function main() {
   }
 
   // ── 2. wikijs_search_pages ───────────────────────────────────────
-  console.log(`\n${CYAN}[2/10] wikijs_search_pages${RESET}`)
+  console.log(`\n${CYAN}[2/29] wikijs_search_pages${RESET}`)
   try {
     const result = await call(ctx, 'wikijs_search_pages', { query: 'test' })
     if (result.isError) throw new Error(textOf(result))
@@ -116,7 +118,7 @@ async function main() {
   }
 
   // ── 3. wikijs_get_page_by_id ─────────────────────────────────────
-  console.log(`\n${CYAN}[3/10] wikijs_get_page_by_id${RESET}`)
+  console.log(`\n${CYAN}[3/29] wikijs_get_page_by_id${RESET}`)
   if (anyPageId) {
     try {
       const result = await call(ctx, 'wikijs_get_page_by_id', { id: anyPageId })
@@ -156,7 +158,7 @@ async function main() {
   }
 
   // ── 4. wikijs_get_page_by_path ───────────────────────────────────
-  console.log(`\n${CYAN}[4/10] wikijs_get_page_by_path${RESET}`)
+  console.log(`\n${CYAN}[4/29] wikijs_get_page_by_path${RESET}`)
   if (anyPagePath) {
     try {
       const result = await call(ctx, 'wikijs_get_page_by_path', { path: anyPagePath })
@@ -193,7 +195,7 @@ async function main() {
   }
 
   // ── 5. wikijs_get_page_tree ──────────────────────────────────────
-  console.log(`\n${CYAN}[5/10] wikijs_get_page_tree${RESET}`)
+  console.log(`\n${CYAN}[5/29] wikijs_get_page_tree${RESET}`)
   try {
     const result = await call(ctx, 'wikijs_get_page_tree', { mode: 'ALL' })
     if (result.isError) throw new Error(textOf(result))
@@ -206,13 +208,16 @@ async function main() {
   }
 
   // ── 6. wikijs_get_page_history ───────────────────────────────────
-  console.log(`\n${CYAN}[6/10] wikijs_get_page_history${RESET}`)
+  console.log(`\n${CYAN}[6/29] wikijs_get_page_history${RESET}`)
   if (anyPageId) {
     try {
       const result = await call(ctx, 'wikijs_get_page_history', { id: anyPageId, limit: 5 })
       if (result.isError) throw new Error(textOf(result))
-      const data = parseJson(result) as { trail: unknown[]; total: number }
+      const data = parseJson(result) as { trail: Array<{ versionId: number }>; total: number }
       ok('wikijs_get_page_history', `${data.total} total versions, ${data.trail.length} returned`)
+      if (data.trail.length > 0) {
+        pageHistoryVersionId = data.trail[0].versionId
+      }
       passed++
     } catch (err) {
       fail('wikijs_get_page_history', err)
@@ -224,7 +229,7 @@ async function main() {
   }
 
   // ── 7. wikijs_list_tags ──────────────────────────────────────────
-  console.log(`\n${CYAN}[7/10] wikijs_list_tags${RESET}`)
+  console.log(`\n${CYAN}[7/29] wikijs_list_tags${RESET}`)
   try {
     const result = await call(ctx, 'wikijs_list_tags', {})
     if (result.isError) throw new Error(textOf(result))
@@ -236,8 +241,200 @@ async function main() {
     failed++
   }
 
-  // ── 8. wikijs_create_page (dry-run first, then live) ─────────────
-  console.log(`\n${CYAN}[8/10] wikijs_create_page${RESET}`)
+  // ── PHASE 1: Enhanced Pages ──────────────────────────────────────
+
+  // ── 8. wikijs_get_page_version ───────────────────────────────────
+  console.log(`\n${CYAN}[8/29] wikijs_get_page_version${RESET}`)
+  if (anyPageId && pageHistoryVersionId) {
+    try {
+      const result = await call(ctx, 'wikijs_get_page_version', {
+        pageId: anyPageId,
+        versionId: pageHistoryVersionId
+      })
+      if (result.isError) throw new Error(textOf(result))
+      const data = parseJson(result) as { versionId: number; content: string }
+      ok(
+        'wikijs_get_page_version',
+        `pageId=${anyPageId} versionId=${data.versionId} content=${data.content.length} chars`
+      )
+      passed++
+    } catch (err) {
+      fail('wikijs_get_page_version', err)
+      failed++
+    }
+  } else {
+    warn('wikijs_get_page_version', 'Skipped — no page history available')
+    warnings++
+  }
+
+  // ── 9. wikijs_get_page_links ─────────────────────────────────────
+  console.log(`\n${CYAN}[9/29] wikijs_get_page_links${RESET}`)
+  try {
+    const result = await call(ctx, 'wikijs_get_page_links', { locale: 'en' })
+    if (result.isError) throw new Error(textOf(result))
+    const data = parseJson(result) as Array<{ id: number; path: string; title: string }>
+    ok('wikijs_get_page_links', `${data.length} page links`)
+    passed++
+  } catch (err) {
+    fail('wikijs_get_page_links', err)
+    failed++
+  }
+
+  // ── 10. wikijs_search_tags ───────────────────────────────────────
+  console.log(`\n${CYAN}[10/29] wikijs_search_tags${RESET}`)
+  try {
+    const result = await call(ctx, 'wikijs_search_tags', { query: 'test' })
+    if (result.isError) throw new Error(textOf(result))
+    const data = parseJson(result) as Array<{ tag: string; title: string }>
+    ok('wikijs_search_tags', `${data.length} tag results`)
+    passed++
+  } catch (err) {
+    fail('wikijs_search_tags', err)
+    failed++
+  }
+
+  // ── PHASE 2: Comments ────────────────────────────────────────────
+
+  // ── 11. wikijs_list_comments ─────────────────────────────────────
+  console.log(`\n${CYAN}[11/29] wikijs_list_comments${RESET}`)
+  if (anyPageId) {
+    try {
+      const result = await call(ctx, 'wikijs_list_comments', { pageId: anyPageId })
+      if (result.isError) throw new Error(textOf(result))
+      const data = parseJson(result) as Array<{ id: number; content: string }>
+      ok('wikijs_list_comments', `${data.length} comments on pageId=${anyPageId}`)
+      if (data.length > 0) {
+        firstCommentId = data[0].id
+      }
+      passed++
+    } catch (err) {
+      fail('wikijs_list_comments', err)
+      failed++
+    }
+  } else {
+    warn('wikijs_list_comments', 'Skipped — no page found')
+    warnings++
+  }
+
+  // ── 12. wikijs_get_comment ───────────────────────────────────────
+  console.log(`\n${CYAN}[12/29] wikijs_get_comment${RESET}`)
+  if (firstCommentId) {
+    try {
+      const result = await call(ctx, 'wikijs_get_comment', { id: firstCommentId })
+      if (result.isError) throw new Error(textOf(result))
+      const data = parseJson(result) as { id: number; content: string }
+      ok('wikijs_get_comment', `id=${data.id} content=${data.content.length} chars`)
+      passed++
+    } catch (err) {
+      fail('wikijs_get_comment', err)
+      failed++
+    }
+  } else {
+    warn('wikijs_get_comment', 'Skipped — no comments found')
+    warnings++
+  }
+
+  // ── PHASE 3: Site Awareness ──────────────────────────────────────
+
+  // ── 13. wikijs_get_system_info ───────────────────────────────────
+  console.log(`\n${CYAN}[13/29] wikijs_get_system_info${RESET}`)
+  try {
+    const result = await call(ctx, 'wikijs_get_system_info', {})
+    if (result.isError) throw new Error(textOf(result))
+    const data = parseJson(result) as { currentVersion: string }
+    ok('wikijs_get_system_info', `currentVersion=${data.currentVersion}`)
+    passed++
+  } catch (err) {
+    fail('wikijs_get_system_info', err)
+    failed++
+  }
+
+  // ── 14. wikijs_get_navigation ────────────────────────────────────
+  console.log(`\n${CYAN}[14/29] wikijs_get_navigation${RESET}`)
+  try {
+    const result = await call(ctx, 'wikijs_get_navigation', {})
+    if (result.isError) throw new Error(textOf(result))
+    const data = parseJson(result) as Array<{ id: string; kind: string }>
+    ok('wikijs_get_navigation', `${data.length} navigation trees`)
+    passed++
+  } catch (err) {
+    fail('wikijs_get_navigation', err)
+    failed++
+  }
+
+  // ── 15. wikijs_get_site_config ───────────────────────────────────
+  console.log(`\n${CYAN}[15/29] wikijs_get_site_config${RESET}`)
+  try {
+    const result = await call(ctx, 'wikijs_get_site_config', {})
+    if (result.isError) throw new Error(textOf(result))
+    const data = parseJson(result) as { host: string; title: string }
+    ok('wikijs_get_site_config', `host=${data.host} title="${data.title}"`)
+    passed++
+  } catch (err) {
+    fail('wikijs_get_site_config', err)
+    failed++
+  }
+
+  // ── PHASE 4: Assets ──────────────────────────────────────────────
+
+  // ── 16. wikijs_list_assets ───────────────────────────────────────
+  console.log(`\n${CYAN}[16/29] wikijs_list_assets${RESET}`)
+  try {
+    const result = await call(ctx, 'wikijs_list_assets', { folderId: 0, kind: 'ALL' })
+    if (result.isError) throw new Error(textOf(result))
+    const data = parseJson(result) as Array<{ id: number; filename: string }>
+    ok('wikijs_list_assets', `${data.length} assets`)
+    passed++
+  } catch (err) {
+    fail('wikijs_list_assets', err)
+    failed++
+  }
+
+  // ── 17. wikijs_list_asset_folders ────────────────────────────────
+  console.log(`\n${CYAN}[17/29] wikijs_list_asset_folders${RESET}`)
+  try {
+    const result = await call(ctx, 'wikijs_list_asset_folders', { parentFolderId: 0 })
+    if (result.isError) throw new Error(textOf(result))
+    const data = parseJson(result) as Array<{ id: number; name: string }>
+    ok('wikijs_list_asset_folders', `${data.length} asset folders`)
+    passed++
+  } catch (err) {
+    fail('wikijs_list_asset_folders', err)
+    failed++
+  }
+
+  // ── PHASE 5: Users ───────────────────────────────────────────────
+
+  // ── 18. wikijs_get_current_user ──────────────────────────────────
+  console.log(`\n${CYAN}[18/29] wikijs_get_current_user${RESET}`)
+  try {
+    const result = await call(ctx, 'wikijs_get_current_user', {})
+    if (result.isError) throw new Error(textOf(result))
+    const data = parseJson(result) as { id: number; name: string; email: string }
+    ok('wikijs_get_current_user', `id=${data.id} name="${data.name}" email="${data.email}"`)
+    passed++
+  } catch (err) {
+    fail('wikijs_get_current_user', err)
+    failed++
+  }
+
+  // ── 19. wikijs_search_users ──────────────────────────────────────
+  console.log(`\n${CYAN}[19/29] wikijs_search_users${RESET}`)
+  try {
+    const result = await call(ctx, 'wikijs_search_users', { query: 'admin' })
+    if (result.isError) throw new Error(textOf(result))
+    const data = parseJson(result) as Array<{ id: number; name: string; email: string }>
+    ok('wikijs_search_users', `${data.length} user results`)
+    passed++
+  } catch (err) {
+    fail('wikijs_search_users', err)
+    failed++
+  }
+
+  // ── MUTATIONS ────────────────────────────────────────────────────
+
+  // ── 20. wikijs_create_page (dry-run first, then live) ────────────
+  console.log(`\n${CYAN}[20/29] wikijs_create_page${RESET}`)
 
   // 8a. Test mutation disabled
   const origMutations = config.mutationsEnabled
@@ -340,8 +537,190 @@ async function main() {
     failed++
   }
 
-  // ── 9. wikijs_update_page ────────────────────────────────────────
-  console.log(`\n${CYAN}[9/10] wikijs_update_page${RESET}`)
+  // ── PHASE 1 MUTATIONS ────────────────────────────────────────────
+
+  // ── 21. wikijs_move_page (dry-run only) ──────────────────────────
+  console.log(`\n${CYAN}[21/29] wikijs_move_page (dry-run)${RESET}`)
+  if (createdPageId) {
+    config.mutationDryRun = true
+    try {
+      const result = await call(ctx, 'wikijs_move_page', {
+        confirm: config.mutationConfirmToken,
+        id: createdPageId,
+        destinationPath: testPagePath + '-moved',
+        destinationLocale: 'en'
+      })
+      if (result.isError) throw new Error(textOf(result))
+      const data = parseJson(result) as { dryRun: boolean; operation: string }
+      if (data.dryRun === true) {
+        ok('wikijs_move_page (dry-run)', `operation="${data.operation}" dryRun=true`)
+        passed++
+      } else {
+        warn('wikijs_move_page (dry-run)', 'Expected dryRun=true')
+        warnings++
+      }
+    } catch (err) {
+      fail('wikijs_move_page (dry-run)', err)
+      failed++
+    }
+  } else {
+    warn('wikijs_move_page (dry-run)', 'Skipped — no page was created')
+    warnings++
+  }
+
+  // ── 22. wikijs_restore_page (dry-run only) ───────────────────────
+  console.log(`\n${CYAN}[22/29] wikijs_restore_page (dry-run)${RESET}`)
+  if (createdPageId) {
+    config.mutationDryRun = true
+    try {
+      const result = await call(ctx, 'wikijs_restore_page', {
+        confirm: config.mutationConfirmToken,
+        pageId: createdPageId,
+        versionId: 1
+      })
+      if (result.isError) throw new Error(textOf(result))
+      const data = parseJson(result) as { dryRun: boolean; operation: string }
+      if (data.dryRun === true) {
+        ok('wikijs_restore_page (dry-run)', `operation="${data.operation}" dryRun=true`)
+        passed++
+      } else {
+        warn('wikijs_restore_page (dry-run)', 'Expected dryRun=true')
+        warnings++
+      }
+    } catch (err) {
+      fail('wikijs_restore_page (dry-run)', err)
+      failed++
+    }
+  } else {
+    warn('wikijs_restore_page (dry-run)', 'Skipped — no page was created')
+    warnings++
+  }
+
+  // ── PHASE 2 MUTATIONS: Comments ──────────────────────────────────
+
+  // ── 23. wikijs_create_comment (dry-run only) ─────────────────────
+  console.log(`\n${CYAN}[23/29] wikijs_create_comment (dry-run)${RESET}`)
+  if (createdPageId) {
+    config.mutationDryRun = true
+    try {
+      const result = await call(ctx, 'wikijs_create_comment', {
+        confirm: config.mutationConfirmToken,
+        pageId: createdPageId,
+        content: 'Test comment created by integration test'
+      })
+      if (result.isError) throw new Error(textOf(result))
+      const data = parseJson(result) as { dryRun: boolean; operation: string }
+      if (data.dryRun === true) {
+        ok('wikijs_create_comment (dry-run)', `operation="${data.operation}" dryRun=true`)
+        passed++
+      } else {
+        warn('wikijs_create_comment (dry-run)', 'Expected dryRun=true')
+        warnings++
+      }
+    } catch (err) {
+      fail('wikijs_create_comment (dry-run)', err)
+      failed++
+    }
+  } else {
+    warn('wikijs_create_comment (dry-run)', 'Skipped — no page was created')
+    warnings++
+  }
+
+  // ── 24. wikijs_update_comment (dry-run only) ─────────────────────
+  console.log(`\n${CYAN}[24/29] wikijs_update_comment (dry-run)${RESET}`)
+  config.mutationDryRun = true
+  try {
+    const result = await call(ctx, 'wikijs_update_comment', {
+      confirm: config.mutationConfirmToken,
+      id: 1,
+      content: 'Updated comment content'
+    })
+    if (result.isError) throw new Error(textOf(result))
+    const data = parseJson(result) as { dryRun: boolean; operation: string }
+    if (data.dryRun === true) {
+      ok('wikijs_update_comment (dry-run)', `operation="${data.operation}" dryRun=true`)
+      passed++
+    } else {
+      warn('wikijs_update_comment (dry-run)', 'Expected dryRun=true')
+      warnings++
+    }
+  } catch (err) {
+    fail('wikijs_update_comment (dry-run)', err)
+    failed++
+  }
+
+  // ── 25. wikijs_delete_comment (dry-run only) ─────────────────────
+  console.log(`\n${CYAN}[25/29] wikijs_delete_comment (dry-run)${RESET}`)
+  config.mutationDryRun = true
+  try {
+    const result = await call(ctx, 'wikijs_delete_comment', {
+      confirm: config.mutationConfirmToken,
+      id: 1
+    })
+    if (result.isError) throw new Error(textOf(result))
+    const data = parseJson(result) as { dryRun: boolean; operation: string }
+    if (data.dryRun === true) {
+      ok('wikijs_delete_comment (dry-run)', `operation="${data.operation}" dryRun=true`)
+      passed++
+    } else {
+      warn('wikijs_delete_comment (dry-run)', 'Expected dryRun=true')
+      warnings++
+    }
+  } catch (err) {
+    fail('wikijs_delete_comment (dry-run)', err)
+    failed++
+  }
+
+  // ── PHASE 3 MUTATIONS: Tag Management ────────────────────────────
+
+  // ── 26. wikijs_update_tag (dry-run only) ─────────────────────────
+  console.log(`\n${CYAN}[26/29] wikijs_update_tag (dry-run)${RESET}`)
+  config.mutationDryRun = true
+  try {
+    const result = await call(ctx, 'wikijs_update_tag', {
+      confirm: config.mutationConfirmToken,
+      id: 1,
+      tag: 'test-updated',
+      title: 'Updated Tag Title'
+    })
+    if (result.isError) throw new Error(textOf(result))
+    const data = parseJson(result) as { dryRun: boolean; operation: string }
+    if (data.dryRun === true) {
+      ok('wikijs_update_tag (dry-run)', `operation="${data.operation}" dryRun=true`)
+      passed++
+    } else {
+      warn('wikijs_update_tag (dry-run)', 'Expected dryRun=true')
+      warnings++
+    }
+  } catch (err) {
+    fail('wikijs_update_tag (dry-run)', err)
+    failed++
+  }
+
+  // ── 27. wikijs_delete_tag (dry-run only) ─────────────────────────
+  console.log(`\n${CYAN}[27/29] wikijs_delete_tag (dry-run)${RESET}`)
+  config.mutationDryRun = true
+  try {
+    const result = await call(ctx, 'wikijs_delete_tag', {
+      confirm: config.mutationConfirmToken,
+      id: 1
+    })
+    if (result.isError) throw new Error(textOf(result))
+    const data = parseJson(result) as { dryRun: boolean; operation: string }
+    if (data.dryRun === true) {
+      ok('wikijs_delete_tag (dry-run)', `operation="${data.operation}" dryRun=true`)
+      passed++
+    } else {
+      warn('wikijs_delete_tag (dry-run)', 'Expected dryRun=true')
+      warnings++
+    }
+  } catch (err) {
+    fail('wikijs_delete_tag (dry-run)', err)
+    failed++
+  }
+
+  // ── 28. wikijs_update_page ───────────────────────────────────────
+  console.log(`\n${CYAN}[28/29] wikijs_update_page${RESET}`)
   if (createdPageId) {
     // 9a. Dry-run update
     config.mutationDryRun = true
@@ -397,8 +776,8 @@ async function main() {
     warnings++
   }
 
-  // ── 10. wikijs_delete_page ───────────────────────────────────────
-  console.log(`\n${CYAN}[10/10] wikijs_delete_page${RESET}`)
+  // ── 29. wikijs_delete_page ───────────────────────────────────────
+  console.log(`\n${CYAN}[29/29] wikijs_delete_page${RESET}`)
   if (createdPageId) {
     // 10a. Dry-run delete
     config.mutationDryRun = true

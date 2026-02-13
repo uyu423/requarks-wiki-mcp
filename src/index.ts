@@ -20,6 +20,11 @@ import {
   markdownGuideContent,
   MARKDOWN_GUIDE_URI
 } from './resources/markdownGuide.js'
+import {
+  permissionsGuideResource,
+  permissionsGuideContent,
+  PERMISSIONS_GUIDE_URI
+} from './resources/permissionsGuide.js'
 import type { ToolContext } from './types.js'
 
 const config = loadConfig()
@@ -51,7 +56,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 })
 
 server.setRequestHandler(ListResourcesRequestSchema, async () => {
-  return { resources: [markdownGuideResource] }
+  return { resources: [markdownGuideResource, permissionsGuideResource] }
 })
 
 server.setRequestHandler(ReadResourceRequestSchema, async (request: ReadResourceRequest) => {
@@ -63,6 +68,17 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request: ReadResource
           uri: MARKDOWN_GUIDE_URI,
           mimeType: 'text/markdown',
           text: markdownGuideContent
+        }
+      ]
+    }
+  }
+  if (uri === PERMISSIONS_GUIDE_URI) {
+    return {
+      contents: [
+        {
+          uri: PERMISSIONS_GUIDE_URI,
+          mimeType: 'text/markdown',
+          text: permissionsGuideContent
         }
       ]
     }
