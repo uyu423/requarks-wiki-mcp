@@ -34,7 +34,7 @@ export const searchTagsTool: ToolModule = {
   definition: {
     name: 'wikijs_search_tags',
     description:
-      'Search for tags matching a query string. Returns tag names and associated page information.',
+      'Search for tags matching a query string. Returns an array of matching tag name strings.',
     inputSchema: {
       type: 'object',
       properties: {

@@ -11,6 +11,7 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
   try {
     const input = inputSchema.parse(raw)
     ctx.enforceMutationSafety(input.confirm)
+    // Tags are global entities, not page-scoped — enforceMutationPath is not applicable
 
     if (ctx.config.mutationDryRun) {
       const dryRunResult = {

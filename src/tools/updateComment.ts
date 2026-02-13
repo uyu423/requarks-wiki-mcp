@@ -12,6 +12,8 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
   try {
     const input = inputSchema.parse(raw)
     ctx.enforceMutationSafety(input.confirm)
+    // Comments are ID-based entities — enforceMutationPath is not applicable
+    // because comments cannot be resolved to a page path without additional queries
 
     if (ctx.config.mutationDryRun) {
       const dryRunResult = {

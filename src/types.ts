@@ -90,7 +90,6 @@ export type CommentItem = {
   authorId: number
   authorName: string
   authorEmail: string
-  authorIP: string
   content: string
   render: string
   createdAt: string

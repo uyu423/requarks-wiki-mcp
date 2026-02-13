@@ -59,7 +59,7 @@ export const getSystemInfoTool: ToolModule = {
   definition: {
     name: 'wikijs_get_system_info',
     description:
-      'Retrieve Wiki.js system information including version, database, host config, and usage statistics. Useful for diagnostics and understanding the wiki instance configuration.',
+      'Retrieve Wiki.js system information including version, database, host config, and usage statistics. Useful for diagnostics and understanding the wiki instance configuration. Note: returns infrastructure details (dbHost, configFile, workingDirectory) that may be sensitive.',
     inputSchema: {
       type: 'object',
       properties: {},

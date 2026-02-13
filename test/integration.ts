@@ -248,7 +248,7 @@ async function main() {
   if (anyPageId && pageHistoryVersionId) {
     try {
       const result = await call(ctx, 'wikijs_get_page_version', {
-        pageId: anyPageId,
+        id: anyPageId,
         versionId: pageHistoryVersionId
       })
       if (result.isError) throw new Error(textOf(result))

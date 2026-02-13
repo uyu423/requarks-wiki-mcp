@@ -20,7 +20,6 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
             authorId
             authorName
             authorEmail
-            authorIP
             content
             render
             createdAt
