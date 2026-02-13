@@ -18,7 +18,6 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
             providerKey
             providerName
             isSystem
-            isActive
             isVerified
             location
             jobTitle

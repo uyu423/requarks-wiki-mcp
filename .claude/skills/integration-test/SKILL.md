@@ -1,13 +1,13 @@
 ---
 name: integration-test
-description: Run a live integration test against a real Wiki.js instance to verify all 10 MCP tools work correctly. Use when the user wants to test the MCP server against a real Wiki.js, validate tool functionality, or run end-to-end verification.
+description: Run a live integration test against a real Wiki.js instance to verify all 29 MCP tools work correctly. Use when the user wants to test the MCP server against a real Wiki.js, validate tool functionality, or run end-to-end verification.
 disable-model-invocation: true
 allowed-tools: Bash, Read, Grep, Glob
 ---
 
 # Wiki.js MCP Integration Test
 
-Run a full end-to-end integration test against a live Wiki.js instance. Tests all 10 MCP tools (7 read + 3 write) and validates error handling.
+Run a full end-to-end integration test against a live Wiki.js instance. Tests all 29 MCP tools (19 read + 10 write) and validates error handling.
 
 ## Step 1: Collect connection details
 
@@ -61,6 +61,18 @@ Verify these tools return successful results:
 | 5 | `wikijs_get_page_tree` | Returns tree items with `id`, `path`, `isFolder` |
 | 6 | `wikijs_get_page_history` | Returns history trail with version entries |
 | 7 | `wikijs_list_tags` | Returns array of tags |
+| 8 | `wikijs_get_page_version` | Returns specific page version content (uses versionId from history) |
+| 9 | `wikijs_get_page_links` | Returns array of page link relationships |
+| 10 | `wikijs_search_tags` | Returns tag search results |
+| 11 | `wikijs_list_comments` | Returns array of comments for a page (may be empty) |
+| 12 | `wikijs_get_comment` | Returns single comment by ID (skipped if no comments found) |
+| 13 | `wikijs_get_system_info` | Returns object with `currentVersion` |
+| 14 | `wikijs_get_navigation` | Returns array of navigation trees |
+| 15 | `wikijs_get_site_config` | Returns site configuration (non-sensitive fields) |
+| 16 | `wikijs_list_assets` | Returns array of assets (folderId=0, kind=ALL) |
+| 17 | `wikijs_list_asset_folders` | Returns array of asset folders |
+| 18 | `wikijs_get_current_user` | Returns current user profile with `id`, `name`, `email` |
+| 19 | `wikijs_search_users` | Returns array of user search results |
 
 ### Error handling checklist
 
@@ -90,16 +102,35 @@ npx tsx test/integration.ts
 
 ### Mutation tool checklist
 
+**Page mutations:**
+
 | # | Tool | What to check |
 |---|------|---------------|
-| 8a | `wikijs_create_page` (disabled) | Blocks when `WIKI_MUTATIONS_ENABLED=false` |
-| 8b | `wikijs_create_page` (wrong token) | Rejects invalid confirm token |
-| 8c | `wikijs_create_page` (dry-run) | Returns `dryRun: true` preview |
-| 8d | `wikijs_create_page` (live) | Creates page, returns `succeeded: true` with page ID |
-| 9a | `wikijs_update_page` (dry-run) | Returns `dryRun: true` preview |
-| 9b | `wikijs_update_page` (live) | Updates page, returns `succeeded: true` |
-| 10a | `wikijs_delete_page` (dry-run) | Returns `dryRun: true` preview |
-| 10b | `wikijs_delete_page` (live) | Deletes page, returns `succeeded: true` |
+| 20a | `wikijs_create_page` (disabled) | Blocks when `WIKI_MUTATIONS_ENABLED=false` |
+| 20b | `wikijs_create_page` (wrong token) | Rejects invalid confirm token |
+| 20c | `wikijs_create_page` (dry-run) | Returns `dryRun: true` preview |
+| 20d | `wikijs_create_page` (live) | Creates page, returns `succeeded: true` with page ID |
+| 21 | `wikijs_move_page` (dry-run) | Returns `dryRun: true` for page move |
+| 22 | `wikijs_restore_page` (dry-run) | Returns `dryRun: true` for version restore |
+| 28a | `wikijs_update_page` (dry-run) | Returns `dryRun: true` preview |
+| 28b | `wikijs_update_page` (live) | Updates page, returns `succeeded: true` |
+| 29a | `wikijs_delete_page` (dry-run) | Returns `dryRun: true` preview |
+| 29b | `wikijs_delete_page` (live) | Deletes page, returns `succeeded: true` |
+
+**Comment mutations (dry-run only):**
+
+| # | Tool | What to check |
+|---|------|---------------|
+| 23 | `wikijs_create_comment` (dry-run) | Returns `dryRun: true` for comment creation |
+| 24 | `wikijs_update_comment` (dry-run) | Returns `dryRun: true` for comment update |
+| 25 | `wikijs_delete_comment` (dry-run) | Returns `dryRun: true` for comment deletion |
+
+**Tag mutations (dry-run only):**
+
+| # | Tool | What to check |
+|---|------|---------------|
+| 26 | `wikijs_update_tag` (dry-run) | Returns `dryRun: true` for tag update |
+| 27 | `wikijs_delete_tag` (dry-run) | Returns `dryRun: true` for tag deletion |
 
 ## Step 5: Report results
 
@@ -126,6 +157,8 @@ For any failures:
   - Error 6003 = page does not exist
   - Reading `content` may need `read:source` permission
   - Delete/move needs `manage:pages` or `delete:pages`
+  - Comment operations need `read:comments`, `write:comments`, or `manage:comments`
+  - Error 8002 = `CommentPostForbidden`, 8003 = `CommentNotFound`, 8004 = `CommentViewForbidden`, 8005 = `CommentManageForbidden`
 
 ## Important
 

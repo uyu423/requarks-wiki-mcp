@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { ToolModule, ToolContext, TagItem } from '../types.js'
+import type { ToolModule, ToolContext } from '../types.js'
 import { textResult, formatErrorForLLM } from '../errors.js'
 
 const inputSchema = z.object({
@@ -13,20 +13,14 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
     const query = `
       query SearchTags($query: String!) {
         pages {
-          searchTags(query: $query) {
-            id
-            tag
-            title
-            createdAt
-            updatedAt
-          }
+          searchTags(query: $query)
         }
       }
     `
 
     const data = await ctx.graphql<{
       pages: {
-        searchTags: TagItem[]
+        searchTags: string[]
       }
     }>(query, { query: input.query })
 

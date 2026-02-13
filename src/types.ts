@@ -177,7 +177,6 @@ export type UserProfile = {
   providerKey: string
   providerName: string | null
   isSystem: boolean
-  isActive: boolean
   isVerified: boolean
   location: string
   jobTitle: string

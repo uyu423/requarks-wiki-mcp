@@ -299,7 +299,7 @@ async function main() {
   console.log(`\n${CYAN}[11/29] wikijs_list_comments${RESET}`)
   if (anyPageId) {
     try {
-      const result = await call(ctx, 'wikijs_list_comments', { pageId: anyPageId })
+      const result = await call(ctx, 'wikijs_list_comments', { path: anyPagePath })
       if (result.isError) throw new Error(textOf(result))
       const data = parseJson(result) as Array<{ id: number; content: string }>
       ok('wikijs_list_comments', `${data.length} comments on pageId=${anyPageId}`)
@@ -575,7 +575,7 @@ async function main() {
     try {
       const result = await call(ctx, 'wikijs_restore_page', {
         confirm: config.mutationConfirmToken,
-        pageId: createdPageId,
+        id: createdPageId,
         versionId: 1
       })
       if (result.isError) throw new Error(textOf(result))
