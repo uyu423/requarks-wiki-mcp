@@ -1,13 +1,13 @@
 ---
 name: release-ready
-description: Prepare a new patch release - version bump, README documentation verification, integration test, publish readiness check, git commit & tag. Analyzes code changes to ensure README reflects actual features/config. Push is intentionally omitted (human's domain).
+description: Prepare a new release (patch/minor/major) - version bump, README documentation verification, integration test, publish readiness check, git commit & tag. Analyzes code changes to ensure README reflects actual features/config. Push is intentionally omitted (human's domain).
 disable-model-invocation: true
 allowed-tools: Bash, Read, Edit, Grep, Glob, AskUserQuestion
 ---
 
 # Release Ready
 
-Prepare a new patch version release. This skill:
+Prepare a new version release. This skill:
 
 1. Bumps the version in all project files
 2. Runs lint, format, build, and test checks
@@ -43,10 +43,14 @@ This skill **does NOT add a changelog section**. Instead, it:
 
 ## Step 1: Determine next version
 
-Read the current version from `package.json` and auto-increment the patch number.
+Read the current version from `package.json`. Ask the user which semver component to bump using `AskUserQuestion`:
+
+- **patch** (default): bug fixes, minor tweaks (e.g., 0.3.0 → 0.3.1)
+- **minor**: new features, backward-compatible changes (e.g., 0.3.0 → 0.4.0)
+- **major**: breaking changes (e.g., 0.3.0 → 1.0.0)
 
 ```
-Current: 0.2.2 → Next: 0.2.3
+Current: 0.3.0 → Next: ? (patch/minor/major)
 ```
 
 Announce the next version to the user before proceeding.
@@ -62,9 +66,9 @@ The version string appears in **4 locations**. Update all of them:
 | `AGENTS.md`         | `**Version:** X.Y.Z`                     | Near the top of the file                                 |
 | `package-lock.json` | Two occurrences of `"version": "X.Y.Z"`  | Lines 3 and 9 (root + packages)                          |
 
-Use the `Edit` tool with `replace_all: false` for each file to ensure precise replacements. For `package-lock.json`, use `replace_all: true` since the old version string should only appear in our package entries.
+Use the `Edit` tool with `replace_all: false` for each file to ensure precise replacements. For `package-lock.json`, update each occurrence individually with sufficient surrounding context (e.g., include the adjacent `"name"` field) to avoid accidentally replacing a dependency's version string. Alternatively, run `npm install --package-lock-only` after updating `package.json` to let npm regenerate it.
 
-**Verify** after editing: run `grep -r "OLD_VERSION" --include="*.json" --include="*.ts" --include="*.md" . --exclude-dir=node_modules` to confirm no stale version references remain.
+**Verify** after editing: run `grep -r "OLD_VERSION" --include="*.json" --include="*.ts" --include="*.md" . --exclude-dir=node_modules --exclude-dir=.claude` to confirm no stale version references remain. Matches in skill files or documentation examples can be ignored.
 
 ## Step 3: Lint & format check
 
@@ -112,7 +116,7 @@ WIKI_HTTP_MAX_RETRIES=2 \
 npx tsx test/integration.ts
 ```
 
-All 18 tests must pass. If any fail, stop and report.
+All tests must pass. If any fail, stop and report.
 
 **NEVER** display the API token in output. Use `<redacted>` in summaries.
 
@@ -127,21 +131,27 @@ Run `npm pack --dry-run` and display the output to the user. Verify:
 - [ ] `package.json` fields are correct: `main`, `bin`, `files`, `name`, `version`
 - [ ] Package size is reasonable (warn if > 500KB)
 
-## Step 6.5: Verify and Update README Documentation
+## Step 7: Verify and Update README Documentation
 
 **This step runs after pack check, before git commit.**
 
 The goal is to **verify README reflects actual code changes**, not to add a changelog section.
 
-### 6.5.1: Analyze changes since last tag
+### 7.1: Analyze changes since last tag
 
 Identify what changed that needs documentation updates:
 
 ```bash
 LAST_TAG=$(git tag --sort=-version:refname | head -1)
 
-# Count tools in registry
-CURRENT_TOOLS=$(grep -c "Tool:" src/tools/registry.ts)
+# Guard: handle first release with no tags
+if [ -z "$LAST_TAG" ]; then
+  echo "No previous tags found. Treating all current code as new."
+  LAST_TAG=$(git rev-list --max-parents=0 HEAD)
+fi
+
+# Count tools in registry (count entries in allTools array)
+CURRENT_TOOLS=$(sed -n '/^export const allTools/,/^]/p' src/tools/registry.ts | grep -c 'Tool')
 
 # Find new tool files
 git diff ${LAST_TAG}..HEAD --diff-filter=A --name-only src/tools/ | grep -c "\.ts$"
@@ -164,7 +174,7 @@ git diff ${LAST_TAG}..HEAD src/tools/*.ts | grep "inputSchema"
 4. **Security/permission changes** → README security/permission sections need updates
 5. **No significant changes** → README update not needed
 
-### 6.5.2: Verify README is up-to-date
+### 7.2: Verify README is up-to-date
 
 Check if README already reflects the changes:
 
@@ -174,8 +184,8 @@ Check if README already reflects the changes:
 # Check README.md for tool count
 grep "MCP Tools" README.md -A 2
 
-# Example: Should show "**29 tools** (19 read + 10 write)"
-# Compare with actual: src/tools/registry.ts allTools.length
+# Compare README count with actual allTools.length from src/tools/registry.ts
+# Flag a mismatch if the numbers differ
 ```
 
 **Tool table verification:**
@@ -196,7 +206,7 @@ grep "MCP Tools" README.md -A 2
 - Check each appears in README.md env var table
 - Flag any missing vars
 
-### 6.5.3: Auto-update README.ko.md (without approval)
+### 7.3: Auto-update README.ko.md (without approval)
 
 **If updates are needed, directly update README.ko.md:**
 
@@ -225,7 +235,7 @@ grep "MCP Tools" README.md -A 2
 
 **This step happens AUTOMATICALLY without asking first.**
 
-### 6.5.4: Show changes and ask for review
+### 7.4: Show changes and ask for review
 
 After updating README.ko.md, show the diff to the user:
 
@@ -260,17 +270,17 @@ Changes made:
 
 Please review README.ko.md and choose:
 
-  1. ✅ Approve - Apply same updates to other READMEs (en, ja, zh, es, pt, vi)
-  2. ✏️  Revise - I'll manually edit README.ko.md, then re-run this skill
-  3. ⏭️  Skip - Keep README.ko.md changes, but don't update other languages
-  4. ❌ Revert - Undo README.ko.md changes completely
+  1. [APPROVE] - Apply same updates to other READMEs (en, ja, zh, es, pt, vi)
+  2. [REVISE]  - I'll manually edit README.ko.md, then re-run this skill
+  3. [SKIP]    - Keep README.ko.md changes, but don't update other languages
+  4. [REVERT]  - Undo README.ko.md changes completely
 
 Your choice? (1/2/3/4)
 ```
 
 Use `AskUserQuestion` to get the response.
 
-### 6.5.5: Handle user response
+### 7.5: Handle user response
 
 **If choice = 1 (Approve)**:
 
@@ -316,12 +326,12 @@ Use `AskUserQuestion` to get the response.
 - Report: "README.ko.md changes reverted."
 - Proceed to next step without staging any README files
 
-**If no updates needed** (from 6.5.2):
+**If no updates needed** (from 7.2):
 
-- Report: "✅ README is up-to-date! No documentation updates needed."
+- Report: "README is up-to-date. No documentation updates needed."
 - Proceed to next step without staging README files
 
-### 6.5.6: Verify updates were applied
+### 7.6: Verify updates were applied
 
 **If user approved (choice = 1)**, verify all README files were updated correctly:
 
@@ -332,9 +342,12 @@ for readme in README.md README.ko.md README.ja.md README.zh.md README.es.md READ
   grep -E "tools|도구|ツール|工具|herramientas|ferramentas" "$readme" | head -1
 done
 
-# Verify new tools appear in main READMEs
-grep "wikijs_get_page_version" README.md
-grep "wikijs_get_page_version" README.ko.md
+# Verify tool count in READMEs matches allTools.length from registry
+EXPECTED=$(sed -n '/^export const allTools/,/^]/p' src/tools/registry.ts | grep -c 'Tool')
+for readme in README.md README.ko.md; do
+  ACTUAL=$(grep -oP '\*\*\d+ tools\*\*|\*\*\d+개 도구\*\*' "$readme" | grep -oP '\d+')
+  echo "$readme: README=$ACTUAL, Registry=$EXPECTED"
+done
 
 # Check which files were actually modified
 git status --short README*.md
@@ -359,17 +372,17 @@ git status README.ko.md
 
 Report any verification failures and offer to retry.
 
-## Step 7: Git commit & tag
+## Step 8: Git commit & tag
 
 Create a release commit and tag. **Do NOT push.**
 
-**Files to stage** (varies based on Step 6.5 outcome):
+**Files to stage** (varies based on Step 7 outcome):
 
 ```bash
 # Always stage version files
 git add package.json package-lock.json src/index.ts AGENTS.md
 
-# README staging depends on user choice in Step 6.5:
+# README staging depends on user choice in Step 7:
 # - Choice 1 (Approve): All READMEs already staged → no action needed
 # - Choice 3 (Skip): Only README.ko.md staged → no action needed
 # - Choice 4 (Revert) or no updates: No READMEs staged → no action needed
@@ -384,9 +397,9 @@ git tag vX.Y.Z
 
 Commit message format: `chore(release): v{version}` (Conventional Commits standard).
 
-**Note**: README files are already staged (or not) by Step 6.5 based on user choice. This step just verifies and commits.
+**Note**: README files are already staged (or not) by Step 7 based on user choice. This step just verifies and commits.
 
-## Step 8: Summary
+## Step 9: Summary
 
 Present the final summary:
 
@@ -399,7 +412,7 @@ Present the final summary:
   Format:            PASS
   Build:             PASS
   Unit tests:        PASS (N tests)
-  Integration tests: PASS (18/18)
+  Integration tests: PASS ({passed}/{total})
   Pack check:        PASS (size: XKB)
 
   README verification: {status}
