@@ -2,7 +2,7 @@
 
 **Generated:** 2026-02-12
 **Commit:** 4a08ebe
-**Version:** 0.2.2
+**Version:** 0.2.3
 **Branch:** main
 
 ## OVERVIEW
