@@ -10,52 +10,71 @@ const inputSchema = z.object({
   includeAncestors: z.boolean().optional()
 })
 
+const TREE_QUERY = `
+  query GetPageTree(
+    $path: String
+    $parent: Int
+    $mode: PageTreeMode!
+    $locale: String!
+    $includeAncestors: Boolean
+  ) {
+    pages {
+      tree(
+        path: $path
+        parent: $parent
+        mode: $mode
+        locale: $locale
+        includeAncestors: $includeAncestors
+      ) {
+        id
+        path
+        depth
+        title
+        isFolder
+        pageId
+        parent
+        locale
+      }
+    }
+  }
+`
+
+async function fetchTree(
+  ctx: ToolContext,
+  vars: { path?: string; parent?: number; mode: string; locale: string; includeAncestors: boolean }
+) {
+  return ctx.graphql<{ pages: { tree: PageTreeItem[] } }>(TREE_QUERY, vars)
+}
+
 async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
   try {
     const input = inputSchema.parse(raw)
     const locale = input.locale ?? ctx.config.defaultLocale
     const mode = input.mode ?? 'ALL'
-
-    const query = `
-      query GetPageTree(
-        $path: String
-        $parent: Int
-        $mode: PageTreeMode!
-        $locale: String!
-        $includeAncestors: Boolean
-      ) {
-        pages {
-          tree(
-            path: $path
-            parent: $parent
-            mode: $mode
-            locale: $locale
-            includeAncestors: $includeAncestors
-          ) {
-            id
-            path
-            depth
-            title
-            isFolder
-            pageId
-            parent
-            locale
-          }
-        }
-      }
-    `
-
-    const data = await ctx.graphql<{
-      pages: { tree: PageTreeItem[] }
-    }>(query, {
+    const vars = {
       path: input.path,
       parent: input.parentId,
       mode,
       locale,
       includeAncestors: input.includeAncestors ?? false
-    })
+    }
 
-    return textResult(JSON.stringify(data.pages.tree, null, 2))
+    let tree: PageTreeItem[]
+    try {
+      const data = await fetchTree(ctx, vars)
+      tree = data.pages.tree
+    } catch (err) {
+      // Wiki.js 2.x has a Knex bug: mode PAGES calls andWhereNotNull which does not exist.
+      // Fallback: fetch with ALL and filter client-side.
+      if (mode === 'PAGES' && err instanceof Error && err.message.includes('andWhereNotNull')) {
+        const data = await fetchTree(ctx, { ...vars, mode: 'ALL' })
+        tree = data.pages.tree.filter((p) => p.pageId != null)
+      } else {
+        throw err
+      }
+    }
+
+    return textResult(JSON.stringify(tree, null, 2))
   } catch (err) {
     return formatErrorForLLM(err, 'get page tree')
   }
