@@ -1,12 +1,23 @@
 # requarks-wiki-mcp
 
-Servidor MCP para una instancia de [Wiki.js](https://js.wiki/) que permite usarla como base de conocimiento.
+Servidor MCP para una instancia de [Wiki.js](https://js.wiki/) que permite a los agentes usarla como base de conocimiento.
 
 Funciones:
 
-- Búsqueda y listado de páginas para flujos de recuperación tipo RAG.
-- Lectura de contenido por ruta o ID de página.
-- Herramientas opcionales de creación/actualización con controles de seguridad explícitos.
+- **29 herramientas** (19 de lectura + 10 de escritura) que cubren páginas, comentarios, etiquetas, recursos, usuarios, navegación e información del sistema.
+- Buscar, listar y navegar páginas para flujos de recuperación (uso tipo RAG).
+- Obtener contenido de página por ruta o ID de página, ver historial de versiones y restaurar versiones anteriores.
+- Navegar la jerarquía del sitio con árbol de páginas, grafo de enlaces de página y estructura de navegación.
+- Sistema completo de comentarios: listar, leer, crear, actualizar y eliminar comentarios en páginas.
+- Navegación de recursos y carpetas para descubrimiento de archivos multimedia.
+- Contexto de usuario: perfil del usuario actual y búsqueda de usuarios.
+- Diagnóstico del sistema: información de versión, configuración del sitio y árbol de navegación.
+- Gestión de etiquetas: listar, buscar, actualizar y eliminar etiquetas.
+- Herramientas opcionales de creación/actualización/eliminación/movimiento/restauración de páginas con controles de seguridad explícitos.
+- Recursos integrados: guía de sintaxis markdown y guía de permisos de API.
+- Taxonomía de errores tipados con mensajes amigables para LLM.
+- Cliente GraphQL con timeout, reintentos con backoff exponencial y correlación de solicitudes.
+- Seguridad reforzada: filtrado de campos sensibles, validación de URL, límites de longitud de entrada.
 
 ## Requisitos
 
@@ -30,43 +41,42 @@ WIKI_GRAPHQL_PATH=/graphql
 WIKI_DEFAULT_LOCALE=en
 WIKI_DEFAULT_EDITOR=markdown
 
-# Mutaciones deshabilitadas por defecto
+# Las operaciones de mutación están deshabilitadas por defecto
 WIKI_MUTATIONS_ENABLED=false
-WIKI_MUTATION_CONFIRM_TOKEN=CONFIRM_UPDATE
+# Control de seguridad adicional opcional para escrituras. Si se establece, las herramientas de escritura deben pasar confirm coincidente.
+WIKI_MUTATION_CONFIRM_TOKEN=
 WIKI_MUTATION_DRY_RUN=true
-# Prefijos de ruta separados por coma (sin '/' inicial, vacío = sin restricción)
+# Prefijos de ruta separados por coma sin barra inicial (vacío = sin restricción de prefijo)
 WIKI_ALLOWED_MUTATION_PATH_PREFIXES=
+
+# Resiliencia HTTP
+WIKI_HTTP_TIMEOUT_MS=15000
+WIKI_HTTP_MAX_RETRIES=2
 ```
 
 Referencia de variables de entorno:
 
-| Variable                              | Requerida | Valor por defecto | Descripción                                                    |
-| ------------------------------------- | --------- | ----------------- | -------------------------------------------------------------- |
-| `WIKI_BASE_URL`                       | Sí        | -                 | URL base de Wiki.js (por ejemplo, `https://wiki.example.com`). |
-| `WIKI_API_TOKEN`                      | Sí        | -                 | JWT del API key usado en `Authorization: Bearer ...`.          |
-| `WIKI_GRAPHQL_PATH`                   | No        | `/graphql`        | Ruta GraphQL añadida a `WIKI_BASE_URL`.                        |
-| `WIKI_DEFAULT_LOCALE`                 | No        | `en`              | Locale por defecto cuando no se envía en la llamada.           |
-| `WIKI_DEFAULT_EDITOR`                 | No        | `markdown`        | Editor por defecto al crear páginas.                           |
-| `WIKI_MUTATIONS_ENABLED`              | No        | `false`           | Activa herramientas de escritura cuando es `true`.             |
-| `WIKI_MUTATION_CONFIRM_TOKEN`         | No        | `CONFIRM_UPDATE`  | Valor `confirm` requerido para mutaciones.                     |
-| `WIKI_MUTATION_DRY_RUN`               | No        | `true`            | Si es `true`, solo devuelve vista previa sin escribir.         |
-| `WIKI_ALLOWED_MUTATION_PATH_PREFIXES` | No        | `` (vacío)        | Prefijos permitidos para mutaciones, separados por coma.       |
+| Variable                              | Requerida | Valor por defecto | Descripción                                                                                                             |
+| ------------------------------------- | --------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `WIKI_BASE_URL`                       | Sí        | -                 | URL base de Wiki.js (por ejemplo, `https://wiki.example.com`).                                                          |
+| `WIKI_API_TOKEN`                      | Sí        | -                 | JWT del API key de Wiki.js usado en `Authorization: Bearer ...`.                                                        |
+| `WIKI_GRAPHQL_PATH`                   | No        | `/graphql`        | Ruta del endpoint GraphQL añadida a `WIKI_BASE_URL`.                                                                    |
+| `WIKI_DEFAULT_LOCALE`                 | No        | `en`              | Locale por defecto usado cuando la entrada de la herramienta no proporciona locale.                                     |
+| `WIKI_DEFAULT_EDITOR`                 | No        | `markdown`        | Editor por defecto usado para la creación de páginas cuando no se especifica.                                           |
+| `WIKI_MUTATIONS_ENABLED`              | No        | `false`           | Habilita todas las herramientas de escritura (mutaciones de página, comentario y etiqueta) cuando se establece a `true`. |
+| `WIKI_MUTATION_CONFIRM_TOKEN`         | No        | `` (vacío)        | Control de seguridad adicional opcional. Cuando se establece, las llamadas de herramientas de escritura deben proporcionar `confirm` coincidente. |
+| `WIKI_MUTATION_DRY_RUN`               | No        | `true`            | Cuando es `true`, las herramientas de mutación devuelven solo vista previa y no escriben en Wiki.js.                     |
+| `WIKI_ALLOWED_MUTATION_PATH_PREFIXES` | No        | `` (vacío)        | Prefijos de ruta separados por coma (sin barra inicial) permitidos para mutaciones. Vacío significa sin restricción de prefijo. |
+| `WIKI_HTTP_TIMEOUT_MS`                | No        | `15000`           | Timeout de solicitud HTTP en milisegundos (incluyendo lectura de cuerpo). Mínimo 1.                                      |
+| `WIKI_HTTP_MAX_RETRIES`               | No        | `2`               | Reintentos máximos para fallos transitorios de lectura (408, 502-504). Las mutaciones nunca se reintentan. Mínimo 0.     |
 
 Requisito de Wiki.js (GraphQL + API key):
 
 - Este MCP usa GraphQL de Wiki.js internamente.
-- En Wiki.js, ve a `Administration -> API` y habilita la API.
-- Crea un API key y configúralo en `WIKI_API_TOKEN`.
+- En la administración de Wiki.js, ve a `Administration -> API` y habilita el acceso a la API.
+- Crea un API key y configúralo como `WIKI_API_TOKEN`.
 
-## Inicio rápido (checklist)
-
-- En Wiki.js: `Administration -> API` -> habilitar API
-- Crear API key y preparar `WIKI_API_TOKEN`
-- En este proyecto: `npm install` -> `npm run build`
-- Agregar configuración en el cliente MCP (`~/.mcp.json`)
-- Primera prueba: `wikijs_search_pages` -> usar `path` en `wikijs_get_page_by_path`
-
-## Ejemplo de configuración MCP (`~/.mcp.json`)
+## Ejemplo de configuración del cliente MCP (`~/.mcp.json`)
 
 ```json
 {
@@ -83,14 +93,27 @@ Requisito de Wiki.js (GraphQL + API key):
         "WIKI_MUTATIONS_ENABLED": "true",
         "WIKI_MUTATION_CONFIRM_TOKEN": "CONFIRM_UPDATE",
         "WIKI_MUTATION_DRY_RUN": "false",
-        "WIKI_ALLOWED_MUTATION_PATH_PREFIXES": ""
+        "WIKI_ALLOWED_MUTATION_PATH_PREFIXES": "",
+        "WIKI_HTTP_TIMEOUT_MS": "15000",
+        "WIKI_HTTP_MAX_RETRIES": "2"
       }
     }
   }
 }
 ```
 
-Ejemplo para local/desarrollo (ejecutar `dist` sin instalar el paquete):
+## Registrar MCP vía ruta local (sin publicar en npm)
+
+Puedes registrar este servidor MCP directamente desde la ruta de tu proyecto local sin publicar/instalar desde npm.
+
+1. Compilar en este repositorio
+
+```bash
+npm install
+npm run build
+```
+
+2. Registrar ruta absoluta local en `~/.mcp.json`
 
 ```json
 {
@@ -107,12 +130,19 @@ Ejemplo para local/desarrollo (ejecutar `dist` sin instalar el paquete):
         "WIKI_MUTATIONS_ENABLED": "true",
         "WIKI_MUTATION_CONFIRM_TOKEN": "",
         "WIKI_MUTATION_DRY_RUN": "false",
-        "WIKI_ALLOWED_MUTATION_PATH_PREFIXES": ""
+        "WIKI_ALLOWED_MUTATION_PATH_PREFIXES": "",
+        "WIKI_HTTP_TIMEOUT_MS": "15000",
+        "WIKI_HTTP_MAX_RETRIES": "2"
       }
     }
   }
 }
 ```
+
+Notas:
+
+- Siempre usa una ruta absoluta.
+- Vuelve a ejecutar `npm run build` después de cambios en el código para que `dist/index.js` se mantenga actualizado.
 
 ## Ejecución
 
@@ -131,63 +161,142 @@ npm start
 
 ## Herramientas MCP
 
-Lectura:
+### Herramientas de lectura (19)
 
-- `wikijs_search_pages`
-- `wikijs_list_pages`
-- `wikijs_get_page_by_path`
-- `wikijs_get_page_by_id`
+**Páginas:**
 
-Escritura (solo con `WIKI_MUTATIONS_ENABLED=true`):
+| Herramienta | Descripción |
+| --- | --- |
+| `wikijs_search_pages` | Búsqueda de texto completo en páginas wiki. |
+| `wikijs_list_pages` | Listar páginas con filtro de locale opcional y límite. |
+| `wikijs_get_page_by_path` | Obtener contenido completo de página por ruta + locale. |
+| `wikijs_get_page_by_id` | Obtener contenido completo de página por ID numérico. |
+| `wikijs_get_page_tree` | Navegar jerarquía del sitio (carpetas, páginas o ambos). |
+| `wikijs_get_page_history` | Ver historial de ediciones de una página. |
+| `wikijs_get_page_version` | Obtener el contenido completo de una versión específica. |
+| `wikijs_get_page_links` | Obtener relaciones de enlaces de página (grafo de conocimiento). |
 
-- `wikijs_create_page`
-- `wikijs_update_page`
+**Etiquetas:**
 
-Las mutaciones requieren `confirm` igual a `WIKI_MUTATION_CONFIRM_TOKEN`.
+| Herramienta | Descripción |
+| --- | --- |
+| `wikijs_list_tags` | Listar todas las etiquetas para descubrimiento de taxonomía de contenido. |
+| `wikijs_search_tags` | Buscar etiquetas que coincidan con una cadena de consulta. |
 
-## Escenarios de uso (simulación de usuario)
+**Comentarios:**
 
-Escenario 1) Investigar una causa de error (estilo RAG)
+| Herramienta | Descripción |
+| --- | --- |
+| `wikijs_list_comments` | Listar todos los comentarios de una página por ruta y locale. |
+| `wikijs_get_comment` | Obtener un solo comentario por ID. |
 
-- Solicitud del usuario: "Busca documentación sobre Kotlin `CancellationException` y dame un resumen corto"
-- Secuencia MCP: `wikijs_search_pages(query="kotlin cancellationexception")` -> `wikijs_get_page_by_path(path=resultado.path)`
-- Resultado: encuentra páginas relevantes y recupera el contenido para resumir causas y soluciones.
+**Sistema y navegación:**
 
-Escenario 2) Revisar cambios recientes de documentación
+| Herramienta | Descripción |
+| --- | --- |
+| `wikijs_get_system_info` | Versión de Wiki.js, tipo de base de datos y estadísticas de uso. |
+| `wikijs_get_navigation` | Estructura de árbol de navegación. |
+| `wikijs_get_site_config` | Configuración del sitio (campos no sensibles). |
 
-- Solicitud del usuario: "Muéstrame las 20 páginas más recientemente actualizadas"
-- Secuencia MCP: `wikijs_list_pages(limit=20, locale="en")`
-- Resultado: devuelve `path/title/updatedAt` para un reporte rápido de cambios.
+**Recursos:**
 
-Escenario 3) Consultar una página exacta por ID
+| Herramienta | Descripción |
+| --- | --- |
+| `wikijs_list_assets` | Listar recursos con filtro opcional de carpeta y tipo. |
+| `wikijs_list_asset_folders` | Listar carpetas de recursos. |
 
-- Solicitud del usuario: "Lee la página 7283 y extrae solo los TODO"
-- Secuencia MCP: `wikijs_get_page_by_id(id=7283)`
-- Resultado: obtiene el contenido exacto de la página y permite extraer solo la información necesaria.
+**Usuarios:**
 
-Escenario 4) Crear contenido con revisión previa segura
+| Herramienta | Descripción |
+| --- | --- |
+| `wikijs_get_current_user` | Obtener el perfil del usuario API autenticado actualmente. |
+| `wikijs_search_users` | Buscar usuarios por nombre o correo electrónico. |
 
-- Solicitud del usuario: "Crea una checklist de despliegue en `sandbox`"
-- Secuencia MCP (revisión): `wikijs_create_page(..., confirm=token)` con `WIKI_MUTATION_DRY_RUN=true`
-- Secuencia MCP (aplicar): misma llamada con `WIKI_MUTATION_DRY_RUN=false`
-- Resultado: primero vista previa, luego creación real en rutas permitidas por `WIKI_ALLOWED_MUTATION_PATH_PREFIXES`.
+### Herramientas de escritura (10, deshabilitadas a menos que `WIKI_MUTATIONS_ENABLED=true`)
 
-## Consejos operativos
+**Mutaciones de páginas:**
 
-- Para flujos RAG, prioriza lectura por `path` (`wikijs_get_page_by_path`). (El `id` de búsqueda puede no coincidir con el ID real de página)
-- Para escritura, se recomienda empezar con `WIKI_MUTATIONS_ENABLED=false` y `WIKI_MUTATION_DRY_RUN=true`.
-- Cuando necesites escribir de verdad: limita el alcance con `WIKI_ALLOWED_MUTATION_PATH_PREFIXES` y luego usa `WIKI_MUTATION_DRY_RUN=false`.
-- Las mutaciones escriben un audit log en stderr; en producción conviene recolectar esos logs.
+| Herramienta | Descripción |
+| --- | --- |
+| `wikijs_create_page` | Crear una nueva página con contenido, etiquetas y metadatos. |
+| `wikijs_update_page` | Actualizar una página existente por ID. |
+| `wikijs_delete_page` | Eliminar una página por ID. Puede necesitar `manage:pages` o `delete:pages`. |
+| `wikijs_move_page` | Mover/renombrar una página a nueva ruta o locale. |
+| `wikijs_restore_page` | Restaurar una página a una versión anterior. |
 
-## Solución de problemas
+**Mutaciones de comentarios:**
 
-- `Missing required environment variable: WIKI_*`: faltan variables en `.env` o en `env` del cliente MCP.
-- `PageViewForbidden 6013`: revisa permisos del grupo del API key y reglas de página para `read:pages`/`read:source`.
-- Se puede listar pero falla `content`: normalmente falta `read:source` en permisos/reglas.
-- Si GraphQL no está en `/graphql`: ajusta `WIKI_GRAPHQL_PATH`.
+| Herramienta | Descripción |
+| --- | --- |
+| `wikijs_create_comment` | Crear un comentario en una página. |
+| `wikijs_update_comment` | Actualizar un comentario existente por ID. |
+| `wikijs_delete_comment` | Eliminar un comentario por ID. |
+
+**Mutaciones de etiquetas:**
+
+| Herramienta | Descripción |
+| --- | --- |
+| `wikijs_update_tag` | Actualizar el slug y título de una etiqueta. |
+| `wikijs_delete_tag` | Eliminar una etiqueta de todas las páginas. |
+
+### Seguridad de mutaciones
+
+- Cuando se establece `WIKI_MUTATION_CONFIRM_TOKEN`, las herramientas de mutación requieren un argumento `confirm` coincidente.
+- Cuando `WIKI_MUTATION_DRY_RUN=true`, las herramientas de escritura devuelven una vista previa y no mutan Wiki.js.
+- Si se establece `WIKI_ALLOWED_MUTATION_PATH_PREFIXES`, las mutaciones de página y creación de comentarios se limitan a esos prefijos de ruta.
+- Todos los intentos de mutación escriben una línea de auditoría estructurada en stderr.
+
+## Recursos MCP
+
+| URI de recurso                     | Descripción                                                                                                                    |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `wikijs://markdown-guide`          | Guía de sintaxis markdown de Wiki.js (CommonMark/GFM + extensiones específicas de Wiki.js) para creación y actualización de páginas. |
+| `wikijs://api-permissions-guide`   | Modelo de permisos de API de Wiki.js, códigos de error y guía de configuración de API key para autodiagnóstico de errores de permisos. |
 
 ## Notas de permisos (Wiki.js)
 
-- Algunas operaciones pueden requerir `manage:pages`/`delete:pages` en reglas de página.
-- La lectura de `content` puede requerir `read:source`.
-- Si aparece 6013 (`PageViewForbidden`), revisa permisos del grupo y reglas de página.
+El comportamiento de permisos de Wiki.js puede ser sorprendente para las API keys. En particular:
+
+- Algunas operaciones pueden requerir reglas `manage:pages`/`delete:pages` a nivel de regla de página.
+- Leer `content` puede requerir `read:source` dependiendo de verificaciones a nivel de esquema/campo.
+- Las operaciones de comentarios requieren `read:comments`, `write:comments` o `manage:comments`.
+- La información del sistema y la navegación requieren permisos de API key a nivel de administrador.
+
+Códigos de error comunes:
+
+| Código | Significado |
+| --- | --- |
+| 6013 | `PageViewForbidden` — verificar permisos de grupo + reglas de página para `read:pages`/`read:source` |
+| 6003 | La página no existe |
+| 8002 | `CommentPostForbidden` |
+| 8003 | `CommentNotFound` |
+| 8004 | `CommentViewForbidden` |
+| 8005 | `CommentManageForbidden` |
+
+Para más detalles, lee el recurso `wikijs://api-permissions-guide`.
+
+## Permisos mínimos sugeridos para API Key
+
+Para uso intensivo en lectura de base de conocimiento:
+
+- `read:pages`, `read:source`
+- `read:comments` (para navegación de comentarios)
+- Reglas de página que permitan esos permisos para rutas/locales previstos
+
+Para flujos de trabajo de escritura:
+
+- `write:pages` (crear y actualizar)
+- `manage:pages` o `delete:pages` (para operaciones de eliminación/movimiento)
+- `write:comments`, `manage:comments` (para mutaciones de comentarios)
+- `manage:system` (para gestión de etiquetas)
+
+## Guía de seguridad
+
+- Mantén el token de API solo del lado del servidor.
+- Comienza con permisos de solo lectura.
+- Mantén `WIKI_MUTATIONS_ENABLED=false` a menos que se necesiten actualizaciones.
+- Refuerzo opcional: establece un `WIKI_MUTATION_CONFIRM_TOKEN` aleatorio fuerte y pasa `confirm` coincidente para llamadas de escritura.
+- Mantén `WIKI_MUTATION_DRY_RUN=true` hasta que estés listo para escrituras reales.
+- Usa `WIKI_ALLOWED_MUTATION_PATH_PREFIXES` para restringir el alcance de escritura.
+- `wikijs_get_system_info` filtra campos de infraestructura sensibles (dbHost, configFile, etc.) por defecto.
+- Los campos `scriptJs`/`scriptCss` en creación/actualización de páginas tienen límite de longitud (10,000 caracteres) e incluyen advertencias de ejecución en navegador.

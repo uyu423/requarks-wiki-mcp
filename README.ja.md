@@ -4,9 +4,20 @@
 
 主な機能:
 
-- RAG 風ワークフロー向けのページ検索/一覧
-- パスまたはページ ID で本文取得
-- 明示的な安全ガード付きのページ作成/更新（任意）
+- **29 個のツール**（読み取り 19 個 + 書き込み 10 個）で、ページ、コメント、タグ、アセット、ユーザー、ナビゲーション、システム情報をカバー
+- RAG 風ワークフロー向けのページ検索、一覧、ブラウジング
+- パスまたはページ ID で本文取得、バージョン履歴の閲覧と以前のバージョンへの復元
+- ページツリー、ページリンクグラフ、ナビゲーション構造によるサイト階層のブラウジング
+- 完全なコメントシステム: ページ上のコメントの一覧表示、読み取り、作成、更新、削除
+- メディアファイル検索のためのアセットとフォルダーのブラウジング
+- ユーザーコンテキスト: 現在のユーザープロフィールとユーザー検索
+- システム診断: バージョン情報、サイト設定、ナビゲーションツリー
+- タグ管理: タグの一覧表示、検索、更新、削除
+- 明示的な安全ガード付きのページ作成/更新/削除/移動/復元ツール（任意）
+- 組み込みリソース: Markdown 構文ガイドと API 権限ガイド
+- LLM にとって分かりやすいエラーメッセージを持つ型付きエラー分類
+- タイムアウト、指数バックオフリトライ、リクエスト相関を備えた GraphQL クライアント
+- セキュリティ強化: 機密フィールドのフィルタリング、URL バリデーション、入力長制限
 
 ## 要件
 
@@ -30,41 +41,40 @@ WIKI_GRAPHQL_PATH=/graphql
 WIKI_DEFAULT_LOCALE=en
 WIKI_DEFAULT_EDITOR=markdown
 
-# 変更系はデフォルト無効
+# 変更系の操作はデフォルトで無効
 WIKI_MUTATIONS_ENABLED=false
-WIKI_MUTATION_CONFIRM_TOKEN=CONFIRM_UPDATE
+# 書き込みツール用の追加安全ゲート（任意）。設定時、書き込みツールは一致する confirm が必要
+WIKI_MUTATION_CONFIRM_TOKEN=
 WIKI_MUTATION_DRY_RUN=true
 # カンマ区切りのパスプレフィックス（先頭 / なし、空なら制限なし）
 WIKI_ALLOWED_MUTATION_PATH_PREFIXES=
+
+# HTTP 回復性
+WIKI_HTTP_TIMEOUT_MS=15000
+WIKI_HTTP_MAX_RETRIES=2
 ```
 
 環境変数リファレンス:
 
-| 変数                                  | 必須   | デフォルト       | 説明                                                   |
-| ------------------------------------- | ------ | ---------------- | ------------------------------------------------------ |
-| `WIKI_BASE_URL`                       | はい   | -                | Wiki.js のベース URL（例: `https://wiki.example.com`） |
-| `WIKI_API_TOKEN`                      | はい   | -                | `Authorization: Bearer ...` で使う API キー JWT        |
-| `WIKI_GRAPHQL_PATH`                   | いいえ | `/graphql`       | `WIKI_BASE_URL` に連結される GraphQL パス              |
-| `WIKI_DEFAULT_LOCALE`                 | いいえ | `en`             | 入力で locale 未指定時に使うデフォルト locale          |
-| `WIKI_DEFAULT_EDITOR`                 | いいえ | `markdown`       | ページ作成時のデフォルト editor                        |
-| `WIKI_MUTATIONS_ENABLED`              | いいえ | `false`          | `true` で書き込みツールを有効化                        |
-| `WIKI_MUTATION_CONFIRM_TOKEN`         | いいえ | `CONFIRM_UPDATE` | 変更系呼び出しで必要な `confirm` 値                    |
-| `WIKI_MUTATION_DRY_RUN`               | いいえ | `true`           | `true` の場合はプレビューのみ返却し実書き込みしない    |
-| `WIKI_ALLOWED_MUTATION_PATH_PREFIXES` | いいえ | `` (空)          | 変更を許可するパスプレフィックス（カンマ区切り）       |
+| 変数                                  | 必須   | デフォルト | 説明                                                                                              |
+| ------------------------------------- | ------ | ---------- | ------------------------------------------------------------------------------------------------- |
+| `WIKI_BASE_URL`                       | はい   | -          | Wiki.js のベース URL（例: `https://wiki.example.com`）                                            |
+| `WIKI_API_TOKEN`                      | はい   | -          | `Authorization: Bearer ...` で使用する Wiki.js API キー JWT                                        |
+| `WIKI_GRAPHQL_PATH`                   | いいえ | `/graphql` | `WIKI_BASE_URL` に追加される GraphQL エンドポイントパス                                           |
+| `WIKI_DEFAULT_LOCALE`                 | いいえ | `en`       | ツール入力で locale が指定されない場合に使用されるデフォルトロケール                              |
+| `WIKI_DEFAULT_EDITOR`                 | いいえ | `markdown` | ページ作成時に指定されない場合に使用されるデフォルトエディター                                    |
+| `WIKI_MUTATIONS_ENABLED`              | いいえ | `false`    | `true` に設定すると、すべての書き込みツール（ページ、コメント、タグの変更）が有効になります       |
+| `WIKI_MUTATION_CONFIRM_TOKEN`         | いいえ | `` (空)    | 追加の安全ゲート（任意）。設定時、書き込みツールの呼び出しで一致する `confirm` を提供する必要あり |
+| `WIKI_MUTATION_DRY_RUN`               | いいえ | `true`     | `true` の場合、変更ツールはプレビューのみを返し、Wiki.js には書き込みません                       |
+| `WIKI_ALLOWED_MUTATION_PATH_PREFIXES` | いいえ | `` (空)    | 変更を許可するパスプレフィックス（先頭スラッシュなし）のカンマ区切り。空は制限なしを意味します    |
+| `WIKI_HTTP_TIMEOUT_MS`                | いいえ | `15000`    | HTTP リクエストのタイムアウト（ミリ秒、本文読み込みを含む）。最小値 1                             |
+| `WIKI_HTTP_MAX_RETRIES`               | いいえ | `2`        | 一時的な読み取り失敗（408, 502-504）の最大リトライ回数。変更操作はリトライされません。最小値 0    |
 
 Wiki.js の前提条件（GraphQL + API キー）:
 
-- この MCP は内部で Wiki.js GraphQL を利用します。
-- Wiki.js 管理画面の `Administration -> API` で API を有効化してください。
-- API キーを発行し、`WIKI_API_TOKEN` に設定してください。
-
-## クイックスタート（チェックリスト）
-
-- Wiki.js: `Administration -> API` -> API を有効化
-- API キーを作成して `WIKI_API_TOKEN` を用意
-- このプロジェクトで `npm install` -> `npm run build`
-- MCP クライアントに `~/.mcp.json` を追加
-- 初回テスト: `wikijs_search_pages` -> 返ってきた `path` を `wikijs_get_page_by_path` に渡す
+- この MCP は内部で Wiki.js GraphQL を使用します。
+- Wiki.js 管理画面で `Administration -> API` に移動し、API アクセスを有効にしてください。
+- API キーを作成し、`WIKI_API_TOKEN` として設定してください。
 
 ## MCP クライアント設定例 (`~/.mcp.json`)
 
@@ -83,14 +93,27 @@ Wiki.js の前提条件（GraphQL + API キー）:
         "WIKI_MUTATIONS_ENABLED": "true",
         "WIKI_MUTATION_CONFIRM_TOKEN": "CONFIRM_UPDATE",
         "WIKI_MUTATION_DRY_RUN": "false",
-        "WIKI_ALLOWED_MUTATION_PATH_PREFIXES": ""
+        "WIKI_ALLOWED_MUTATION_PATH_PREFIXES": "",
+        "WIKI_HTTP_TIMEOUT_MS": "15000",
+        "WIKI_HTTP_MAX_RETRIES": "2"
       }
     }
   }
 }
 ```
 
-ローカル/開発向け（パッケージをインストールせず dist を直接実行）:
+## ローカルパス経由での MCP 登録（npm publish なし）
+
+npm から公開/インストールせずに、ローカルプロジェクトパスから直接この MCP サーバーを登録できます。
+
+1. このリポジトリでビルドする
+
+```bash
+npm install
+npm run build
+```
+
+2. `~/.mcp.json` にローカルの絶対パスを登録する
 
 ```json
 {
@@ -107,12 +130,19 @@ Wiki.js の前提条件（GraphQL + API キー）:
         "WIKI_MUTATIONS_ENABLED": "true",
         "WIKI_MUTATION_CONFIRM_TOKEN": "",
         "WIKI_MUTATION_DRY_RUN": "false",
-        "WIKI_ALLOWED_MUTATION_PATH_PREFIXES": ""
+        "WIKI_ALLOWED_MUTATION_PATH_PREFIXES": "",
+        "WIKI_HTTP_TIMEOUT_MS": "15000",
+        "WIKI_HTTP_MAX_RETRIES": "2"
       }
     }
   }
 }
 ```
+
+注意:
+
+- 常に絶対パスを使用してください。
+- コード変更後は `npm run build` を再実行して `dist/index.js` を最新に保ってください。
 
 ## 実行
 
@@ -131,65 +161,142 @@ npm start
 
 ## MCP ツール
 
-読み取りツール:
+### 読み取りツール（19 個）
 
-- `wikijs_search_pages`
-- `wikijs_list_pages`
-- `wikijs_get_page_by_path`
-- `wikijs_get_page_by_id`
+**ページ:**
 
-書き込みツール（`WIKI_MUTATIONS_ENABLED=true` のときのみ）:
+| ツール                    | 説明                                          |
+| ------------------------- | --------------------------------------------- |
+| `wikijs_search_pages`     | Wiki ページ全体でフルテキスト検索を実行       |
+| `wikijs_list_pages`       | ロケールフィルターと制限付きでページを一覧表示 |
+| `wikijs_get_page_by_path` | パス + ロケールで完全なページコンテンツを取得 |
+| `wikijs_get_page_by_id`   | 数値 ID で完全なページコンテンツを取得        |
+| `wikijs_get_page_tree`    | サイト階層をブラウズ（フォルダー、ページ、または両方） |
+| `wikijs_get_page_history` | ページの編集履歴を表示                        |
+| `wikijs_get_page_version` | 特定バージョンの完全なコンテンツを取得        |
+| `wikijs_get_page_links`   | ページリンク関係を取得（ナレッジグラフ）      |
 
-- `wikijs_create_page`
-- `wikijs_update_page`
+**タグ:**
 
-変更系ツールは `confirm` が `WIKI_MUTATION_CONFIRM_TOKEN` と一致する必要があります。
-`WIKI_MUTATION_DRY_RUN=true` の場合はプレビューのみで更新しません。
-`WIKI_ALLOWED_MUTATION_PATH_PREFIXES` を設定すると、その範囲にのみ書き込みを制限します。
+| ツール                 | 説明                                           |
+| ---------------------- | ---------------------------------------------- |
+| `wikijs_list_tags`     | コンテンツ分類検索用のすべてのタグを一覧表示   |
+| `wikijs_search_tags`   | クエリ文字列に一致するタグを検索               |
 
-## 利用シナリオ（ユーザー行動シミュレーション）
+**コメント:**
 
-シナリオ 1) エラー原因の調査（RAG スタイル）
+| ツール                  | 説明                                      |
+| ----------------------- | ----------------------------------------- |
+| `wikijs_list_comments`  | パスとロケールでページのすべてのコメントを一覧表示 |
+| `wikijs_get_comment`    | ID で単一のコメントを取得                 |
 
-- ユーザー依頼: 「Kotlin の `CancellationException` 関連ドキュメントを探して要点をまとめて」
-- MCP 呼び出し順: `wikijs_search_pages(query="kotlin cancellationexception")` -> `wikijs_get_page_by_path(path=検索結果.path)`
-- 結果: 関連ページを検索し、本文を取得して原因/対処を要約できる。
+**システムとナビゲーション:**
 
-シナリオ 2) 最近更新された文書の確認
+| ツール                     | 説明                                           |
+| -------------------------- | ---------------------------------------------- |
+| `wikijs_get_system_info`   | Wiki.js バージョン、データベースタイプ、使用統計 |
+| `wikijs_get_navigation`    | ナビゲーションツリー構造                       |
+| `wikijs_get_site_config`   | サイト設定（機密フィールド以外）               |
 
-- ユーザー依頼: 「最近更新された文書を上位 20 件見せて」
-- MCP 呼び出し順: `wikijs_list_pages(limit=20, locale="en")`
-- 結果: `path/title/updatedAt` をもとに更新レポートを作成できる。
+**アセット:**
 
-シナリオ 3) ページ ID 指定の直接参照
+| ツール                       | 説明                                       |
+| ---------------------------- | ------------------------------------------ |
+| `wikijs_list_assets`         | フォルダーと種類フィルター付きでアセットを一覧表示 |
+| `wikijs_list_asset_folders`  | アセットフォルダーを一覧表示               |
 
-- ユーザー依頼: 「ページ ID 7283 を読んで TODO だけ抽出して」
-- MCP 呼び出し順: `wikijs_get_page_by_id(id=7283)`
-- 結果: 特定ページの本文を直接取得し、必要情報のみ抽出できる。
+**ユーザー:**
 
-シナリオ 4) 安全な事前確認つきページ作成
+| ツール                    | 説明                                   |
+| ------------------------- | -------------------------------------- |
+| `wikijs_get_current_user` | 現在認証されている API ユーザーのプロフィールを取得 |
+| `wikijs_search_users`     | 名前またはメールでユーザーを検索       |
 
-- ユーザー依頼: 「`sandbox` にデプロイチェックリストを作って」
-- MCP 呼び出し順（確認）: `wikijs_create_page(..., confirm=token)` with `WIKI_MUTATION_DRY_RUN=true`
-- MCP 呼び出し順（反映）: 同じ呼び出し with `WIKI_MUTATION_DRY_RUN=false`
-- 結果: まずプレビュー確認し、その後 `WIKI_ALLOWED_MUTATION_PATH_PREFIXES` の範囲内で本番作成。
+### 書き込みツール（10 個、`WIKI_MUTATIONS_ENABLED=true` でない限り無効）
 
-## 運用のヒント
+**ページの変更:**
 
-- RAG では `id` より `path` ベースの取得（`wikijs_get_page_by_path`）を優先してください。（検索結果の `id` がページ ID と一致しない場合があります）
-- 書き込みは `WIKI_MUTATIONS_ENABLED=false` と `WIKI_MUTATION_DRY_RUN=true` から始めるのがおすすめです。
-- 実書き込みが必要になったら、まず `WIKI_ALLOWED_MUTATION_PATH_PREFIXES` で範囲を絞り、その後 `WIKI_MUTATION_DRY_RUN=false` に切り替えてください。
-- 変更系の試行は stderr に audit ログが出るため、運用ではログ収集（例: systemd/journald, docker logs）を有効にしておくと安全です。
+| ツール                 | 説明                                                                 |
+| ---------------------- | -------------------------------------------------------------------- |
+| `wikijs_create_page`   | コンテンツ、タグ、メタデータを含む新しいページを作成                 |
+| `wikijs_update_page`   | ID で既存のページを更新                                              |
+| `wikijs_delete_page`   | ID でページを削除。`manage:pages` または `delete:pages` が必要な場合あり |
+| `wikijs_move_page`     | ページを新しいパスまたはロケールに移動/名前変更                      |
+| `wikijs_restore_page`  | ページを以前のバージョンに復元                                       |
 
-## トラブルシューティング
+**コメントの変更:**
 
-- `Missing required environment variable: WIKI_*`: `.env` または MCP クライアント設定の `env` が不足しています。
-- `PageViewForbidden 6013`: API キーグループ権限とページルールで `read:pages`/`read:source` が許可されているか確認してください。
-- リストは取れるのに `content` だけ失敗: 多くの場合 `read:source` の権限/ページルール不足です。
-- GraphQL が `/graphql` 以外: `WIKI_GRAPHQL_PATH` を環境に合わせて変更してください。
+| ツール                  | 説明                       |
+| ----------------------- | -------------------------- |
+| `wikijs_create_comment` | ページにコメントを作成     |
+| `wikijs_update_comment` | ID で既存のコメントを更新  |
+| `wikijs_delete_comment` | ID でコメントを削除        |
+
+**タグの変更:**
+
+| ツール              | 説明                           |
+| ------------------- | ------------------------------ |
+| `wikijs_update_tag` | タグのスラッグとタイトルを更新 |
+| `wikijs_delete_tag` | すべてのページからタグを削除   |
+
+### 変更の安全性
+
+- `WIKI_MUTATION_CONFIRM_TOKEN` が設定されている場合、変更ツールには一致する `confirm` 引数が必要です。
+- `WIKI_MUTATION_DRY_RUN=true` の場合、書き込みツールはプレビューを返し、Wiki.js を変更しません。
+- `WIKI_ALLOWED_MUTATION_PATH_PREFIXES` が設定されている場合、ページおよびコメント作成の変更はそれらのパスプレフィックスに制限されます。
+- すべての変更試行は構造化された監査行を stderr に書き込みます。
+
+## MCP リソース
+
+| リソース URI                     | 説明                                                                                                           |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `wikijs://markdown-guide`        | ページの作成と更新を目的とした Wiki.js Markdown 構文ガイド（CommonMark/GFM + Wiki.js 固有の拡張機能）          |
+| `wikijs://api-permissions-guide` | 権限エラーを自己診断するための Wiki.js API 権限モデル、エラーコード、API キー設定ガイド                        |
 
 ## 権限メモ（Wiki.js）
 
-- 一部操作ではページルール側で `manage:pages`/`delete:pages` が必要になる場合があります。
-- `content` の読み取りには `read:source` が必要な場合があります。
-- 6013（`PageViewForbidden`）が出る場合は API キーグループ権限とページルールを確認してください。
+Wiki.js の権限動作は API キーにとって意外な場合があります。特に:
+
+- 一部の操作では、ページルールレベルで `manage:pages`/`delete:pages` ルールが必要な場合があります。
+- `content` の読み取りには、スキーマ/フィールドレベルのチェックに応じて `read:source` が必要な場合があります。
+- コメント操作には `read:comments`、`write:comments`、または `manage:comments` が必要です。
+- システム情報とナビゲーションには管理者レベルの API キー権限が必要です。
+
+一般的なエラーコード:
+
+| コード | 意味                                                                                   |
+| ------ | -------------------------------------------------------------------------------------- |
+| 6013   | `PageViewForbidden` — `read:pages`/`read:source` のグループ権限 + ページルールを確認   |
+| 6003   | ページが存在しません                                                                   |
+| 8002   | `CommentPostForbidden`                                                                 |
+| 8003   | `CommentNotFound`                                                                      |
+| 8004   | `CommentViewForbidden`                                                                 |
+| 8005   | `CommentManageForbidden`                                                               |
+
+詳細については、`wikijs://api-permissions-guide` リソースをお読みください。
+
+## 推奨される最小 API キー権限
+
+読み取り中心のナレッジベース用途の場合:
+
+- `read:pages`、`read:source`
+- `read:comments`（コメントのブラウジング用）
+- 意図したパス/ロケールに対してこれらの権限を許可するページルール
+
+書き込みワークフロー用の場合:
+
+- `write:pages`（作成と更新）
+- `manage:pages` または `delete:pages`（削除/移動操作用）
+- `write:comments`、`manage:comments`（コメントの変更用）
+- `manage:system`（タグ管理用）
+
+## セキュリティガイダンス
+
+- API トークンはサーバー側でのみ保管してください。
+- 読み取り専用権限から始めてください。
+- 更新が必要でない限り、`WIKI_MUTATIONS_ENABLED=false` のままにしてください。
+- 追加の強化（任意）: 強力なランダムな `WIKI_MUTATION_CONFIRM_TOKEN` を設定し、書き込み呼び出しに一致する `confirm` を渡してください。
+- 実際の書き込みの準備ができるまで、`WIKI_MUTATION_DRY_RUN=true` のままにしてください。
+- `WIKI_ALLOWED_MUTATION_PATH_PREFIXES` を使用して書き込み範囲を制限してください。
+- `wikijs_get_system_info` はデフォルトで機密インフラストラクチャフィールド（dbHost、configFile など）をフィルタリングします。
+- ページ作成/更新の `scriptJs`/`scriptCss` フィールドは長さ制限（10,000 文字）があり、ブラウザー実行警告が含まれます。

@@ -53,11 +53,7 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
           }
         }
       }
-    }>(
-      mutation,
-      { id: input.id, tag: input.tag, title: input.title },
-      { noRetry: true }
-    )
+    }>(mutation, { id: input.id, tag: input.tag, title: input.title }, { noRetry: true })
 
     ctx.auditMutation('updateTag', {
       dryRun: false,

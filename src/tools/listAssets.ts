@@ -57,8 +57,15 @@ export const listAssetsTool: ToolModule = {
     inputSchema: {
       type: 'object',
       properties: {
-        folderId: { type: 'number', description: 'Folder ID to list assets from. Default 0 (root folder).' },
-        kind: { type: 'string', enum: ['IMAGE', 'BINARY', 'ALL'], description: 'Asset type filter. Default ALL.' }
+        folderId: {
+          type: 'number',
+          description: 'Folder ID to list assets from. Default 0 (root folder).'
+        },
+        kind: {
+          type: 'string',
+          enum: ['IMAGE', 'BINARY', 'ALL'],
+          description: 'Asset type filter. Default ALL.'
+        }
       },
       additionalProperties: false
     }

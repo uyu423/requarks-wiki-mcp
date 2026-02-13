@@ -243,13 +243,16 @@ export const updatePageTool: ToolModule = {
         tags: { type: 'array', items: { type: 'string' } },
         isPublished: { type: 'boolean' },
         isPrivate: { type: 'boolean' },
-        publishStartDate: { type: 'string', description: 'Publication start date (ISO 8601 format).' },
+        publishStartDate: {
+          type: 'string',
+          description: 'Publication start date (ISO 8601 format).'
+        },
         publishEndDate: { type: 'string', description: 'Publication end date (ISO 8601 format).' },
         scriptCss: { type: 'string', description: 'Custom CSS for the page. Max 10,000 chars.' },
         scriptJs: {
           type: 'string',
           description:
-            'Custom JavaScript for the page. WARNING: executes in every visitor\'s browser. Only use trusted code. Max 10,000 chars.'
+            "Custom JavaScript for the page. WARNING: executes in every visitor's browser. Only use trusted code. Max 10,000 chars."
         }
       },
       required: ['id'],

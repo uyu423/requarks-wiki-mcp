@@ -44,7 +44,10 @@ export const getPageLinksTool: ToolModule = {
     inputSchema: {
       type: 'object',
       properties: {
-        locale: { type: 'string', description: 'Locale code. Defaults to configured default locale.' }
+        locale: {
+          type: 'string',
+          description: 'Locale code. Defaults to configured default locale.'
+        }
       },
       additionalProperties: false
     }

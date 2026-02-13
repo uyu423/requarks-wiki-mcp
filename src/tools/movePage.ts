@@ -138,7 +138,10 @@ export const movePageTool: ToolModule = {
         },
         id: { type: 'number', description: 'Page ID to move.' },
         destinationPath: { type: 'string', description: 'New path for the page.' },
-        destinationLocale: { type: 'string', description: 'New locale. Defaults to current locale.' }
+        destinationLocale: {
+          type: 'string',
+          description: 'New locale. Defaults to current locale.'
+        }
       },
       required: ['id', 'destinationPath'],
       additionalProperties: false

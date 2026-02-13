@@ -51,8 +51,13 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
 
     // Filter sensitive infrastructure fields to prevent information disclosure
     const sensitiveFields = new Set([
-      'dbHost', 'configFile', 'workingDirectory', 'hostname',
-      'sslSubscriberEmail', 'telemetryClientId', 'sslDomain'
+      'dbHost',
+      'configFile',
+      'workingDirectory',
+      'hostname',
+      'sslSubscriberEmail',
+      'telemetryClientId',
+      'sslDomain'
     ])
     const safeInfo = Object.fromEntries(
       Object.entries(data.system.info).filter(([key]) => !sensitiveFields.has(key))
