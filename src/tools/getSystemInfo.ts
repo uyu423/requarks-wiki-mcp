@@ -49,7 +49,16 @@ async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
       system: { info: SystemInfo }
     }>(query, {})
 
-    return textResult(JSON.stringify(data.system.info, null, 2))
+    // Filter sensitive infrastructure fields to prevent information disclosure
+    const sensitiveFields = new Set([
+      'dbHost', 'configFile', 'workingDirectory', 'hostname',
+      'sslSubscriberEmail', 'telemetryClientId', 'sslDomain'
+    ])
+    const safeInfo = Object.fromEntries(
+      Object.entries(data.system.info).filter(([key]) => !sensitiveFields.has(key))
+    )
+
+    return textResult(JSON.stringify(safeInfo, null, 2))
   } catch (err) {
     return formatErrorForLLM(err, 'get system info')
   }
@@ -59,7 +68,7 @@ export const getSystemInfoTool: ToolModule = {
   definition: {
     name: 'wikijs_get_system_info',
     description:
-      'Retrieve Wiki.js system information including version, database, host config, and usage statistics. Useful for diagnostics and understanding the wiki instance configuration. Note: returns infrastructure details (dbHost, configFile, workingDirectory) that may be sensitive.',
+      'Retrieve Wiki.js system information including version, database type, and usage statistics. Useful for diagnostics. Sensitive fields (dbHost, configFile, workingDirectory, hostname) are filtered out.',
     inputSchema: {
       type: 'object',
       properties: {},

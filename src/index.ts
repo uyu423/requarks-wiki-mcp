@@ -99,7 +99,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
     return await tool.handler(ctx, args)
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    return errorResult(message)
+    // Sanitize: take only first line and limit length to prevent leaking stack traces
+    const sanitized = message.split('\n')[0].substring(0, 500)
+    return errorResult(sanitized)
   }
 })
 

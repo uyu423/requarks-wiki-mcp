@@ -45,6 +45,20 @@ function intEnv(name: string, fallback: number, min: number): number {
   return parsed
 }
 
+function validateBaseUrl(raw: string): string {
+  const trimmed = raw.replace(/\/$/, '')
+  let url: URL
+  try {
+    url = new URL(trimmed)
+  } catch {
+    throw new Error(`WIKI_BASE_URL is not a valid URL: ${trimmed}`)
+  }
+  if (!['http:', 'https:'].includes(url.protocol)) {
+    throw new Error(`WIKI_BASE_URL must use http or https protocol, got: ${url.protocol}`)
+  }
+  return trimmed
+}
+
 export function loadConfig(): WikiConfig {
   const mutationsEnabled = optionalEnv('WIKI_MUTATIONS_ENABLED', 'false').toLowerCase() === 'true'
   const mutationConfirmToken = optionalEnv('WIKI_MUTATION_CONFIRM_TOKEN', '')
@@ -58,7 +72,7 @@ export function loadConfig(): WikiConfig {
   }
 
   return {
-    baseUrl: requiredEnv('WIKI_BASE_URL').replace(/\/$/, ''),
+    baseUrl: validateBaseUrl(requiredEnv('WIKI_BASE_URL')),
     graphPath: normalizeGraphPath(optionalEnv('WIKI_GRAPHQL_PATH', '/graphql')),
     apiToken: requiredEnv('WIKI_API_TOKEN'),
     defaultLocale: optionalEnv('WIKI_DEFAULT_LOCALE', 'en'),

@@ -16,8 +16,8 @@ const inputSchema = z.object({
   isPrivate: z.boolean().optional(),
   publishStartDate: z.string().optional(),
   publishEndDate: z.string().optional(),
-  scriptCss: z.string().optional(),
-  scriptJs: z.string().optional()
+  scriptCss: z.string().max(10000).optional(),
+  scriptJs: z.string().max(10000).optional()
 })
 
 async function handler(ctx: ToolContext, raw: Record<string, unknown>) {
@@ -212,8 +212,12 @@ export const createPageTool: ToolModule = {
         isPrivate: { type: 'boolean', description: 'Defaults false.' },
         publishStartDate: { type: 'string', description: 'Publication start date (ISO 8601 format).' },
         publishEndDate: { type: 'string', description: 'Publication end date (ISO 8601 format).' },
-        scriptCss: { type: 'string', description: 'Custom CSS for the page.' },
-        scriptJs: { type: 'string', description: 'Custom JavaScript for the page.' }
+        scriptCss: { type: 'string', description: 'Custom CSS for the page. Max 10,000 chars.' },
+        scriptJs: {
+          type: 'string',
+          description:
+            'Custom JavaScript for the page. WARNING: executes in every visitor\'s browser. Only use trusted code. Max 10,000 chars.'
+        }
       },
       required: ['path', 'title', 'content'],
       additionalProperties: false

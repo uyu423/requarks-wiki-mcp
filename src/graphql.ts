@@ -40,7 +40,7 @@ function retryDelay(attempt: number): number {
 }
 
 function generateRequestId(): string {
-  return `req_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
+  return `req_${Date.now().toString(36)}_${crypto.randomUUID().slice(0, 8)}`
 }
 
 export function createGraphQLClient(config: WikiConfig): GraphQLClient {
