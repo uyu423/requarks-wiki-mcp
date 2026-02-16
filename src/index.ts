@@ -25,6 +25,11 @@ import {
   permissionsGuideContent,
   PERMISSIONS_GUIDE_URI
 } from './resources/permissionsGuide.js'
+import {
+  mermaidGuideResource,
+  mermaidGuideContent,
+  MERMAID_GUIDE_URI
+} from './resources/mermaidGuide.js'
 import type { ToolContext } from './types.js'
 
 const config = loadConfig()
@@ -56,7 +61,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 })
 
 server.setRequestHandler(ListResourcesRequestSchema, async () => {
-  return { resources: [markdownGuideResource, permissionsGuideResource] }
+  return { resources: [markdownGuideResource, permissionsGuideResource, mermaidGuideResource] }
 })
 
 server.setRequestHandler(ReadResourceRequestSchema, async (request: ReadResourceRequest) => {
@@ -79,6 +84,17 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request: ReadResource
           uri: PERMISSIONS_GUIDE_URI,
           mimeType: 'text/markdown',
           text: permissionsGuideContent
+        }
+      ]
+    }
+  }
+  if (uri === MERMAID_GUIDE_URI) {
+    return {
+      contents: [
+        {
+          uri: MERMAID_GUIDE_URI,
+          mimeType: 'text/markdown',
+          text: mermaidGuideContent
         }
       ]
     }

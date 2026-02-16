@@ -226,7 +226,7 @@ export const updatePageTool: ToolModule = {
             'IMAGE DIMENSIONS — append =WIDTHxHEIGHT after URL:',
             '  ![alt](/img.jpg =300x200)  ![alt](/img.jpg =100%x)',
             '',
-            'DIAGRAMS — mermaid or plantuml fenced code blocks.',
+            'DIAGRAMS — mermaid or plantuml fenced code blocks. For Mermaid 8.8.2 syntax details, read the wikijs://mermaid-guide resource.',
             'TABLE STYLE — {.dense} after table for compact rendering.',
             'LIST STYLES — {.grid-list} or {.links-list} after list.',
             'TEXT — ~sub~  ^super^  <kbd>Key</kbd>  ~~strike~~',
