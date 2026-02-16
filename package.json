@@ -1,6 +1,6 @@
 {
   "name": "@yowu-dev/requarks-wiki-mcp",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "MCP server for Wiki.js knowledge-base read/write operations",
   "type": "module",
   "main": "dist/index.js",

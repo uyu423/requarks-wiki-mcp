@@ -14,7 +14,7 @@ Features:
 - System diagnostics: version info, site config, and navigation tree.
 - Tag management: list, search, update, and delete tags.
 - Optional page create/update/delete/move/restore tools with explicit safety gates.
-- Built-in resources: markdown syntax guide and API permissions guide.
+- Built-in resources: markdown syntax guide, Mermaid diagram guide, and API permissions guide.
 - Typed error taxonomy with LLM-friendly error messages.
 - GraphQL client with timeout, exponential-backoff retry, and request correlation.
 - Security hardening: sensitive field filtering, URL validation, input length limits.
@@ -251,6 +251,7 @@ npm start
 | Resource URI                       | Description                                                                                                           |
 | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | `wikijs://markdown-guide`          | Wiki.js markdown syntax guide (CommonMark/GFM + Wiki.js-specific extensions) intended for page authoring and updates. |
+| `wikijs://mermaid-guide`           | Mermaid 8.8.2 diagram syntax guide for Wiki.js (9 supported diagram types, unsupported feature warnings, version restrictions). |
 | `wikijs://api-permissions-guide`   | Wiki.js API permission model, error codes, and API key configuration guide for self-diagnosing permission errors.     |
 
 ## Permission Notes (Wiki.js)

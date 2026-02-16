@@ -14,7 +14,7 @@ Recursos:
 - Diagnósticos do sistema: informações de versão, configuração do site e árvore de navegação.
 - Gerenciamento de tags: listar, buscar, atualizar e deletar tags.
 - Ferramentas opcionais de criar/atualizar/deletar/mover/restaurar páginas com mecanismos de segurança explícitos.
-- Recursos integrados: guia de sintaxe markdown e guia de permissões da API.
+- Recursos integrados: guia de sintaxe markdown, guia de diagramas Mermaid e guia de permissões da API.
 - Taxonomia de erros tipada com mensagens amigáveis para LLM.
 - Cliente GraphQL com timeout, retry com backoff exponencial e correlação de requisições.
 - Proteção de segurança: filtragem de campos sensíveis, validação de URL, limites de tamanho de entrada.
@@ -251,6 +251,7 @@ npm start
 | URI do Recurso                     | Descrição                                                                                                                              |
 | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | `wikijs://markdown-guide`          | Guia de sintaxe markdown do Wiki.js (CommonMark/GFM + extensões específicas do Wiki.js) destinado à criação e atualização de páginas. |
+| `wikijs://mermaid-guide`           | Guia de sintaxe de diagramas Mermaid 8.8.2 para Wiki.js (9 tipos de diagrama suportados, avisos de funcionalidades não suportadas, restrições de versão). |
 | `wikijs://api-permissions-guide`   | Modelo de permissões da API do Wiki.js, códigos de erro e guia de configuração de chave de API para autodiagnóstico de erros de permissão. |
 
 ## Notas sobre Permissões (Wiki.js)

@@ -14,7 +14,7 @@ Tính năng:
 - Chẩn đoán hệ thống: thông tin phiên bản, cấu hình trang web và cây điều hướng.
 - Quản lý thẻ: liệt kê, tìm kiếm, cập nhật và xóa thẻ.
 - Công cụ tạo/cập nhật/xóa/di chuyển/khôi phục trang tùy chọn với cơ chế bảo vệ an toàn rõ ràng.
-- Tài nguyên tích hợp: hướng dẫn cú pháp markdown và hướng dẫn quyền API.
+- Tài nguyên tích hợp: hướng dẫn cú pháp markdown, hướng dẫn sơ đồ Mermaid và hướng dẫn quyền API.
 - Phân loại lỗi có kiểu với thông báo lỗi thân thiện với LLM.
 - Client GraphQL với timeout, thử lại theo cấp số nhân và tương quan yêu cầu.
 - Tăng cường bảo mật: lọc trường nhạy cảm, xác thực URL, giới hạn độ dài đầu vào.
@@ -251,6 +251,7 @@ npm start
 | URI tài nguyên                     | Mô tả                                                                                                                                  |
 | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | `wikijs://markdown-guide`          | Hướng dẫn cú pháp markdown của Wiki.js (CommonMark/GFM + tiện ích mở rộng đặc biệt của Wiki.js) dành cho việc tạo và cập nhật trang. |
+| `wikijs://mermaid-guide`           | Hướng dẫn cú pháp sơ đồ Mermaid 8.8.2 cho Wiki.js (9 loại sơ đồ được hỗ trợ, cảnh báo tính năng không hỗ trợ, hạn chế phiên bản). |
 | `wikijs://api-permissions-guide`   | Mô hình quyền API của Wiki.js, mã lỗi và hướng dẫn cấu hình khóa API để tự chẩn đoán lỗi quyền.                                       |
 
 ## Lưu ý về quyền (Wiki.js)

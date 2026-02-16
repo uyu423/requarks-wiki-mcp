@@ -173,8 +173,7 @@ describe('mermaidGuide – syntax features', () => {
   it('prefers graph over flowchart keyword', () => {
     // The guide should recommend using `graph` over `flowchart`
     assert.ok(
-      mermaidGuideContent.includes('graph') &&
-        mermaidGuideContent.toLowerCase().includes('prefer')
+      mermaidGuideContent.includes('graph') && mermaidGuideContent.toLowerCase().includes('prefer')
     )
   })
 })
@@ -194,9 +193,7 @@ describe('mermaidGuide – no unsupported syntax in examples', () => {
           if (line.trim().startsWith('subgraph')) inSubgraph = true
           if (line.trim() === 'end') inSubgraph = false
           if (inSubgraph && /^\s*direction\s+(TB|TD|BT|RL|LR)/.test(line)) {
-            assert.fail(
-              `Found "direction" inside subgraph in example:\n${block}`
-            )
+            assert.fail(`Found "direction" inside subgraph in example:\n${block}`)
           }
         }
       }
@@ -210,9 +207,7 @@ describe('mermaidGuide – no unsupported syntax in examples', () => {
       const block = match[1]
       const firstLine = block.trim().split('\n')[0].trim()
       if (firstLine.startsWith('flowchart')) {
-        assert.fail(
-          `Example uses "flowchart" keyword instead of "graph":\n${block}`
-        )
+        assert.fail(`Example uses "flowchart" keyword instead of "graph":\n${block}`)
       }
     }
   })
@@ -233,10 +228,7 @@ describe('mermaidGuide – no unsupported syntax in examples', () => {
     while ((match = codeBlockRegex.exec(mermaidGuideContent)) !== null) {
       const firstLine = match[1].trim().split('\n')[0].trim()
       for (const type of unsupported) {
-        assert.ok(
-          !firstLine.startsWith(type),
-          `Example uses unsupported diagram type "${type}"`
-        )
+        assert.ok(!firstLine.startsWith(type), `Example uses unsupported diagram type "${type}"`)
       }
     }
   })

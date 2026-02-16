@@ -14,7 +14,7 @@ Funciones:
 - Diagnóstico del sistema: información de versión, configuración del sitio y árbol de navegación.
 - Gestión de etiquetas: listar, buscar, actualizar y eliminar etiquetas.
 - Herramientas opcionales de creación/actualización/eliminación/movimiento/restauración de páginas con controles de seguridad explícitos.
-- Recursos integrados: guía de sintaxis markdown y guía de permisos de API.
+- Recursos integrados: guía de sintaxis markdown, guía de diagramas Mermaid y guía de permisos de API.
 - Taxonomía de errores tipados con mensajes amigables para LLM.
 - Cliente GraphQL con timeout, reintentos con backoff exponencial y correlación de solicitudes.
 - Seguridad reforzada: filtrado de campos sensibles, validación de URL, límites de longitud de entrada.
@@ -251,6 +251,7 @@ npm start
 | URI de recurso                     | Descripción                                                                                                                    |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | `wikijs://markdown-guide`          | Guía de sintaxis markdown de Wiki.js (CommonMark/GFM + extensiones específicas de Wiki.js) para creación y actualización de páginas. |
+| `wikijs://mermaid-guide`           | Guía de sintaxis de diagramas Mermaid 8.8.2 para Wiki.js (9 tipos de diagrama soportados, advertencias de funciones no soportadas, restricciones de versión). |
 | `wikijs://api-permissions-guide`   | Modelo de permisos de API de Wiki.js, códigos de error y guía de configuración de API key para autodiagnóstico de errores de permisos. |
 
 ## Notas de permisos (Wiki.js)

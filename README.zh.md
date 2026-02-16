@@ -14,7 +14,7 @@
 - 系统诊断：版本信息、站点配置和导航树。
 - 标签管理：列表、搜索、更新和删除标签。
 - 可选的页面创建/更新/删除/移动/恢复工具，带显式安全保护。
-- 内置资源：markdown 语法指南和 API 权限指南。
+- 内置资源：markdown 语法指南、Mermaid 图表指南和 API 权限指南。
 - 类型化错误分类，提供 LLM 友好的错误消息。
 - GraphQL 客户端，具有超时、指数退避重试和请求关联功能。
 - 安全加固：敏感字段过滤、URL 验证、输入长度限制。
@@ -251,6 +251,7 @@ npm start
 | 资源 URI | 说明 |
 | --- | --- |
 | `wikijs://markdown-guide` | Wiki.js markdown 语法指南（CommonMark/GFM + Wiki.js 特定扩展），用于页面创作和更新。 |
+| `wikijs://mermaid-guide` | Wiki.js 内置 Mermaid 8.8.2 图表语法指南（支持9种图表类型、不支持功能警告、版本限制说明）。 |
 | `wikijs://api-permissions-guide` | Wiki.js API 权限模型、错误代码和 API Key 配置指南，用于自行诊断权限错误。 |
 
 ## 权限说明（Wiki.js）
